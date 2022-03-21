@@ -21,9 +21,16 @@ export interface GifRfcPartsLogicalScreenDescriptor {
     pixelAspectRatio: number;
 }
 
+export interface GifRfcColor {
+    red: number;
+    green: number;
+    blue: number;
+}
+
 export interface GifRfcParts {
     header: GifRfcPartsHeader;
     logicalScreenDescriptor: GifRfcPartsLogicalScreenDescriptor;
+    globalColorTable: GifRfcColor[] | null;
 }
 
 function readBits(byte: number, start: number, end: number): number {
@@ -51,6 +58,14 @@ export class GifAnalyzer {
         return this._rfcParts.header.version as Version;
     }
 
+    get globalColorTableExists(): boolean {
+        return this._rfcParts.logicalScreenDescriptor.packedFields.globalColorTableFlag;
+    }
+
+    get globalColorTableSize(): number {
+        return 2 ** (this._rfcParts.logicalScreenDescriptor.packedFields.globalColorTableSize + 1);
+    }
+
     constructor(bytes: Buffer) {
         this.bytes = bytes;
         this.parse();
@@ -61,6 +76,7 @@ export class GifAnalyzer {
 
         this._rfcParts.header = this.parseHeader();
         this._rfcParts.logicalScreenDescriptor = this.parseLogicalScreenDescriptor();
+        this._rfcParts.globalColorTable = this.parseGlobalColorTable();
     }
 
     private parseHeaderSignature(): string {
@@ -129,6 +145,31 @@ export class GifAnalyzer {
             backgroundColorIndex: logicalScreenDescriptorBytes.readUInt8(5),
             pixelAspectRatio: logicalScreenDescriptorBytes.readUInt8(6)
         };
+    }
+
+    private parseGlobalColorTable(): GifRfcColor[] | null {
+        let globalColorTable: GifRfcColor[] | null = null;
+
+        if (this.globalColorTableExists) {
+            globalColorTable = [];
+
+            for (let i = 0; i < this.globalColorTableSize; i++) {
+                const colourBytes = this.bytes.slice(this.cursor, this.cursor + 3);
+                this.cursor += 3;
+
+                if (colourBytes.length !== 3) {
+                    throw new Error('Error in parsing global color table, not enough bytes');
+                }
+
+                globalColorTable.push({
+                    red: colourBytes.readUInt8(0),
+                    green: colourBytes.readUInt8(1),
+                    blue: colourBytes.readUInt8(2)
+                });
+            }
+        }
+
+        return globalColorTable;
     }
 }
 
