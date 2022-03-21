@@ -4,6 +4,11 @@
   "description": "An npm module to decompose a GIF file into its RFC parts",
   "main": "index.js",
   "scripts": {
+    "clean": "shx rm -rf dist bundled",
+    "pretranspile": "npm run clean",
+    "transpile": "tsc -p source",
+    "prebundle": "npm run clean",
+    "bundle": "webpack",
     "lint": "eslint source --ext ts --format codeframe",
     "lint:fix": "eslint source --ext ts --format codeframe --fix"
   },
