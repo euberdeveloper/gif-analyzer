@@ -16,10 +16,14 @@ export class GifAnalyzer {
     private static readonly VERSIONS = Object.values(Version);
 
     private readonly bytes: Buffer;
-    private rfcParts: GifRfcParts;
+    private _rfcParts: GifRfcParts;
+
+    get rfcParts(): GifRfcParts {
+        return this._rfcParts;
+    }
 
     get version(): Version {
-        return this.rfcParts.header.version as Version;
+        return this._rfcParts.header.version as Version;
     }
 
     constructor(bytes: Buffer) {
@@ -27,10 +31,10 @@ export class GifAnalyzer {
         this.parse();
     }
 
-    public parse(): void {
-        this.rfcParts = {} as GifRfcParts;
+    private parse(): void {
+        this._rfcParts = {} as GifRfcParts;
 
-        this.rfcParts.header = this.parseHeader(0);
+        this._rfcParts.header = this.parseHeader(0);
     }
 
     private parseHeaderSignature(startIndex: number): string {
@@ -56,7 +60,7 @@ export class GifAnalyzer {
         }
 
         const version = versionBytes.toString() as Version;
-        if (GifAnalyzer.VERSIONS.includes(version)) {
+        if (!GifAnalyzer.VERSIONS.includes(version)) {
             console.warn('Error in parsing version, not a valid version');
         }
 
@@ -76,3 +80,8 @@ export class GifAnalyzer {
         };
     }
 }
+
+import * as fs from 'fs';
+const gif = fs.readFileSync('./test.gif');
+const gifAnalyzer = new GifAnalyzer(gif);
+console.log(gifAnalyzer.rfcParts);
