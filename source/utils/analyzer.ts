@@ -41,6 +41,7 @@ export class GifAnalyzer {
 
     private readonly bytes: Buffer;
     private _rfcParts: GifRfcParts;
+    private cursor = 0;
 
     get rfcParts(): GifRfcParts {
         return this._rfcParts;
@@ -58,12 +59,13 @@ export class GifAnalyzer {
     private parse(): void {
         this._rfcParts = {} as GifRfcParts;
 
-        this._rfcParts.header = this.parseHeader(0);
-        this._rfcParts.logicalScreenDescriptor = this.parseLogicalScreenDescriptor(6);
+        this._rfcParts.header = this.parseHeader();
+        this._rfcParts.logicalScreenDescriptor = this.parseLogicalScreenDescriptor();
     }
 
-    private parseHeaderSignature(startIndex: number): string {
-        const signatureBytes = this.bytes.slice(startIndex, startIndex + 3);
+    private parseHeaderSignature(): string {
+        const signatureBytes = this.bytes.slice(this.cursor, this.cursor + 3);
+        this.cursor += 3;
 
         if (signatureBytes.length !== 3) {
             throw new Error('Error in parsing signature, not enough bytes');
@@ -77,8 +79,9 @@ export class GifAnalyzer {
         return signature;
     }
 
-    private parseHeaderVersion(startIndex: number): string {
-        const versionBytes = this.bytes.slice(startIndex, startIndex + 3);
+    private parseHeaderVersion(): string {
+        const versionBytes = this.bytes.slice(this.cursor, this.cursor + 3);
+        this.cursor += 3;
 
         if (versionBytes.length !== 3) {
             throw new Error('Error in parsing version, not enough bytes');
@@ -92,21 +95,22 @@ export class GifAnalyzer {
         return version;
     }
 
-    private parseHeader(startIndex: number): GifRfcPartsHeader {
-        const headerBytes = this.bytes.slice(startIndex, startIndex + 6);
+    private parseHeader(): GifRfcPartsHeader {
+        const headerBytes = this.bytes.slice(this.cursor, this.cursor + 6);
 
         if (headerBytes.length !== 6) {
             throw new Error('Error in parsing header, not enough bytes');
         }
 
         return {
-            signature: this.parseHeaderSignature(startIndex),
-            version: this.parseHeaderVersion(startIndex + 3)
+            signature: this.parseHeaderSignature(),
+            version: this.parseHeaderVersion()
         };
     }
 
-    private parseLogicalScreenDescriptor(startIndex: number): GifRfcPartsLogicalScreenDescriptor {
-        const logicalScreenDescriptorBytes = this.bytes.slice(startIndex, startIndex + 7);
+    private parseLogicalScreenDescriptor(): GifRfcPartsLogicalScreenDescriptor {
+        const logicalScreenDescriptorBytes = this.bytes.slice(this.cursor, this.cursor + 7);
+        this.cursor += 7;
 
         if (logicalScreenDescriptorBytes.length !== 7) {
             throw new Error('Error in parsing logical screen descriptor, not enough bytes');
@@ -117,9 +121,9 @@ export class GifAnalyzer {
             width: logicalScreenDescriptorBytes.readUInt16LE(0),
             height: logicalScreenDescriptorBytes.readUInt16LE(2),
             packedFields: {
-                globalColorTableFlag: readBits(packedFields, 0, 1) as any,
+                globalColorTableFlag: readBits(packedFields, 0, 1) === 1,
                 colorResolution: readBits(packedFields, 1, 4),
-                sortFlag: readBits(packedFields, 4, 5) as any,
+                sortFlag: readBits(packedFields, 4, 5) === 1,
                 globalColorTableSize: readBits(packedFields, 5, 8)
             },
             backgroundColorIndex: logicalScreenDescriptorBytes.readUInt8(5),
