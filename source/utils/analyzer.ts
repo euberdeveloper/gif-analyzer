@@ -29,8 +29,8 @@ export interface GifRfcParts {
 function readBits(byte: number, start: number, end: number): number {
     let mask = 0;
     for (let i = 0; i < 8; i++) {
-        mask += i >= start && i < end ? 1 : 0;
         mask <<= 1;
+        mask += i >= start && i < end ? 1 : 0;
     }
 
     return (byte & mask) >> (8 - end);
@@ -117,9 +117,9 @@ export class GifAnalyzer {
             width: logicalScreenDescriptorBytes.readUInt16LE(0),
             height: logicalScreenDescriptorBytes.readUInt16LE(2),
             packedFields: {
-                globalColorTableFlag: readBits(packedFields, 0, 1) === 1,
+                globalColorTableFlag: readBits(packedFields, 0, 1) as any,
                 colorResolution: readBits(packedFields, 1, 4),
-                sortFlag: readBits(packedFields, 4, 5) === 1,
+                sortFlag: readBits(packedFields, 4, 5) as any,
                 globalColorTableSize: readBits(packedFields, 5, 8)
             },
             backgroundColorIndex: logicalScreenDescriptorBytes.readUInt8(5),
