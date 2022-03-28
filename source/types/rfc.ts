@@ -61,7 +61,7 @@ export interface GifGraphicControlExtension extends GifExtension {
     transparentColorIndex: number;
 }
 
-export type GifGraphicRenderingBlock = GifTableBasedImage | GifPlainTextExtension;
+export type GifGraphicRenderingBlock = GifTableBasedImage | GifPlainTextExtension | GifApplicationExtension;
 
 export interface GifTableBasedImage {
     imageDescriptor: GifImageDescriptor;

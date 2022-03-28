@@ -233,11 +233,16 @@ export class GifAnalyzer {
         switch (nextByte) {
             case EXTENSION_INTRODUCER:
                 const extensionLabel = this.bytes.readUInt8(this.cursor++);
-                if (extensionLabel !== ExtensionLabel.PLAINTEXT_EXTENSION) {
-                    throw new Error('Error in parsing graphic rendering block, not a plaintext extension');
+                switch (extensionLabel) {
+                    case ExtensionLabel.PLAINTEXT_EXTENSION:
+                        return this.parsePlainTextExtension();
+                    case ExtensionLabel.APPLICATION_EXTENSION:
+                        return this.parseApplicationExtension();
+                    default:
+                        throw new Error(
+                            `Error in parsing graphic rendering block, not an allowed extension ${extensionLabel}`
+                        );
                 }
-
-                return this.parsePlainTextExtension();
             case IMAGE_SEPARATOR:
                 return this.parseTableBasedImage();
             default:
@@ -330,8 +335,9 @@ export class GifAnalyzer {
         const extensionLabel = this.bytes.readUInt8(this.cursor++);
         switch (extensionLabel) {
             case ExtensionLabel.GRAPHIC_CONTROL_EXTENSION:
+                const merda = this.parseGraphicControlExtension();
                 const block: GifGraphicBlock = {
-                    graphicControlExtension: this.parseGraphicControlExtension(),
+                    graphicControlExtension: merda,
                     graphicRenderingBlock: this.parseGraphicRenderingBlock()
                 };
                 return block;
