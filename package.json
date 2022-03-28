@@ -10,7 +10,8 @@
     "prebundle": "npm run clean",
     "bundle": "webpack",
     "lint": "eslint source --ext ts --format codeframe",
-    "lint:fix": "eslint source --ext ts --format codeframe --fix"
+    "lint:fix": "eslint source --ext ts --format codeframe --fix",
+    "serve": "npm run transpile && node dist"
   },
   "repository": {
     "type": "git",
@@ -30,6 +31,7 @@
   "homepage": "https://github.com/euberdeveloper/gif-analyzer#readme",
   "devDependencies": {
     "@euberdeveloper/eslint-plugin": "^1.2.2",
+    "@types/module-alias": "^2.0.1",
     "@typescript-eslint/eslint-plugin": "^5.15.0",
     "@typescript-eslint/parser": "^5.15.0",
     "dts-bundle-webpack": "^1.0.2",
@@ -38,6 +40,7 @@
     "eslint-formatter-codeframe": "^7.32.1",
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-unicorn": "^41.0.1",
+    "module-alias": "^2.2.2",
     "prettier": "^2.6.0",
     "shx": "^0.3.4",
     "ts-loader": "^9.2.8",

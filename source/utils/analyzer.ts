@@ -1,36 +1,8 @@
+import { GifDataStream, GifHeader, GifLogicalScreenDescriptor, GifColor } from '@/types';
+
 export enum Version {
     V_87A = '87a',
     V_89A = '89a'
-}
-
-export interface GifRfcPartsHeader {
-    signature: string;
-    version: string;
-}
-
-export interface GifRfcPartsLogicalScreenDescriptor {
-    width: number;
-    height: number;
-    packedFields: {
-        globalColorTableFlag: boolean;
-        colorResolution: number;
-        sortFlag: boolean;
-        globalColorTableSize: number;
-    };
-    backgroundColorIndex: number;
-    pixelAspectRatio: number;
-}
-
-export interface GifRfcColor {
-    red: number;
-    green: number;
-    blue: number;
-}
-
-export interface GifRfcParts {
-    header: GifRfcPartsHeader;
-    logicalScreenDescriptor: GifRfcPartsLogicalScreenDescriptor;
-    globalColorTable: GifRfcColor[] | null;
 }
 
 function readBits(byte: number, start: number, end: number): number {
@@ -47,10 +19,10 @@ export class GifAnalyzer {
     private static readonly VERSIONS = Object.values(Version);
 
     private readonly bytes: Buffer;
-    private _rfcParts: GifRfcParts;
+    private _rfcParts: GifDataStream;
     private cursor = 0;
 
-    get rfcParts(): GifRfcParts {
+    get rfcParts(): GifDataStream {
         return this._rfcParts;
     }
 
@@ -59,11 +31,11 @@ export class GifAnalyzer {
     }
 
     get globalColorTableExists(): boolean {
-        return this._rfcParts.logicalScreenDescriptor.packedFields.globalColorTableFlag;
+        return this._rfcParts.logicalScreen.logicalScreenDescriptor.packedFields.globalColorTableFlag;
     }
 
     get globalColorTableSize(): number {
-        return 2 ** (this._rfcParts.logicalScreenDescriptor.packedFields.globalColorTableSize + 1);
+        return 2 ** (this._rfcParts.logicalScreen.logicalScreenDescriptor.packedFields.globalColorTableSize + 1);
     }
 
     constructor(bytes: Buffer) {
@@ -72,11 +44,13 @@ export class GifAnalyzer {
     }
 
     private parse(): void {
-        this._rfcParts = {} as GifRfcParts;
+        this._rfcParts = {
+            logicalScreen: {}
+        } as GifDataStream;
 
         this._rfcParts.header = this.parseHeader();
-        this._rfcParts.logicalScreenDescriptor = this.parseLogicalScreenDescriptor();
-        this._rfcParts.globalColorTable = this.parseGlobalColorTable();
+        this._rfcParts.logicalScreen.logicalScreenDescriptor = this.parseLogicalScreenDescriptor();
+        this._rfcParts.logicalScreen.globalColorTable = this.parseGlobalColorTable();
     }
 
     private parseHeaderSignature(): string {
@@ -111,7 +85,7 @@ export class GifAnalyzer {
         return version;
     }
 
-    private parseHeader(): GifRfcPartsHeader {
+    private parseHeader(): GifHeader {
         const headerBytes = this.bytes.slice(this.cursor, this.cursor + 6);
 
         if (headerBytes.length !== 6) {
@@ -124,7 +98,7 @@ export class GifAnalyzer {
         };
     }
 
-    private parseLogicalScreenDescriptor(): GifRfcPartsLogicalScreenDescriptor {
+    private parseLogicalScreenDescriptor(): GifLogicalScreenDescriptor {
         const logicalScreenDescriptorBytes = this.bytes.slice(this.cursor, this.cursor + 7);
         this.cursor += 7;
 
@@ -147,8 +121,8 @@ export class GifAnalyzer {
         };
     }
 
-    private parseGlobalColorTable(): GifRfcColor[] | null {
-        let globalColorTable: GifRfcColor[] | null = null;
+    private parseGlobalColorTable(): GifColor[] | null {
+        let globalColorTable: GifColor[] | null = null;
 
         if (this.globalColorTableExists) {
             globalColorTable = [];
@@ -172,8 +146,3 @@ export class GifAnalyzer {
         return globalColorTable;
     }
 }
-
-import * as fs from 'fs';
-const gif = fs.readFileSync('./test.gif');
-const gifAnalyzer = new GifAnalyzer(gif);
-console.log(gifAnalyzer.rfcParts);
