@@ -1,19 +1,23 @@
-import { GifDataStream, GifHeader, GifLogicalScreenDescriptor, GifColor } from '@/types';
+import {
+    GifDataStream,
+    GifHeader,
+    GifLogicalScreenDescriptor,
+    GifData,
+    GifGraphicControlExtension,
+    GifGraphicBlock,
+    GifGraphicRenderingBlock,
+    GifTableBasedImage,
+    GifImageDescriptor,
+    GifColorTable,
+    GifImageData,
+    GifCommentExtension,
+    GifPlainTextExtension,
+    GifApplicationExtension
+} from '@/types';
+import { ExtensionLabel, EXTENSION_INTRODUCER, IMAGE_SEPARATOR, Version } from './constants';
+import { readBits } from './parsing';
 
-export enum Version {
-    V_87A = '87a',
-    V_89A = '89a'
-}
-
-function readBits(byte: number, start: number, end: number): number {
-    let mask = 0;
-    for (let i = 0; i < 8; i++) {
-        mask <<= 1;
-        mask += i >= start && i < end ? 1 : 0;
-    }
-
-    return (byte & mask) >> (8 - end);
-}
+export * from './constants';
 
 export class GifAnalyzer {
     private static readonly VERSIONS = Object.values(Version);
@@ -50,7 +54,10 @@ export class GifAnalyzer {
 
         this._rfcParts.header = this.parseHeader();
         this._rfcParts.logicalScreen.logicalScreenDescriptor = this.parseLogicalScreenDescriptor();
-        this._rfcParts.logicalScreen.globalColorTable = this.parseGlobalColorTable();
+        this._rfcParts.logicalScreen.globalColorTable = this.globalColorTableExists
+            ? this.parseColorTable(this.globalColorTableSize)
+            : null;
+        this._rfcParts.data = this.parseData();
     }
 
     private parseHeaderSignature(): string {
@@ -121,28 +128,245 @@ export class GifAnalyzer {
         };
     }
 
-    private parseGlobalColorTable(): GifColor[] | null {
-        let globalColorTable: GifColor[] | null = null;
+    private parseColorTable(size: number): GifColorTable {
+        const colorTable: GifColorTable = [];
 
-        if (this.globalColorTableExists) {
-            globalColorTable = [];
+        for (let i = 0; i < size; i++) {
+            const colourBytes = this.bytes.slice(this.cursor, this.cursor + 3);
+            this.cursor += 3;
 
-            for (let i = 0; i < this.globalColorTableSize; i++) {
-                const colourBytes = this.bytes.slice(this.cursor, this.cursor + 3);
-                this.cursor += 3;
-
-                if (colourBytes.length !== 3) {
-                    throw new Error('Error in parsing global color table, not enough bytes');
-                }
-
-                globalColorTable.push({
-                    red: colourBytes.readUInt8(0),
-                    green: colourBytes.readUInt8(1),
-                    blue: colourBytes.readUInt8(2)
-                });
+            if (colourBytes.length !== 3) {
+                throw new Error('Error in parsing color table, not enough bytes');
             }
+
+            colorTable.push({
+                red: colourBytes.readUInt8(0),
+                green: colourBytes.readUInt8(1),
+                blue: colourBytes.readUInt8(2)
+            });
         }
 
-        return globalColorTable;
+        return colorTable;
+    }
+
+    private parseGraphicControlExtension(): GifGraphicControlExtension {
+        const graphicControlExtensionBytes = this.bytes.slice(this.cursor, this.cursor + 5);
+        this.cursor += 5;
+
+        if (graphicControlExtensionBytes.length !== 5) {
+            throw new Error('Error in parsing graphic control extension, not enough bytes');
+        }
+
+        const blockTerminator = this.bytes.readUInt8(this.cursor++);
+        if (blockTerminator !== 0) {
+            console.warn('Error in parsing graphic control extension, block terminator not 0');
+        }
+
+        const packedBits = graphicControlExtensionBytes.readUInt8(1);
+        return {
+            extensionIntroducer: EXTENSION_INTRODUCER,
+            extensionLabel: ExtensionLabel.GRAPHIC_CONTROL_EXTENSION,
+            blockSize: graphicControlExtensionBytes.readUInt8(0),
+            packedFields: {
+                reserved: readBits(packedBits, 0, 3),
+                disposalMethod: readBits(packedBits, 3, 6),
+                userInputFlag: readBits(packedBits, 6, 7) === 1,
+                transparentColorFlag: readBits(packedBits, 7, 8) === 1
+            },
+            delayTime: graphicControlExtensionBytes.readUInt16LE(2),
+            transparentColorIndex: graphicControlExtensionBytes.readUInt8(4),
+            blockTerminator: blockTerminator
+        };
+    }
+
+    private parseTableBasedImage(): GifTableBasedImage {
+        const imageDescriptor = this.parseImageDescriptor();
+
+        return {
+            imageDescriptor,
+            localColorTable: imageDescriptor.packedFields.localColorTableFlag
+                ? this.parseColorTable(imageDescriptor.packedFields.localColorTableSize)
+                : null,
+            imageData: this.parseImageData()
+        };
+    }
+
+    private parseImageData(): GifImageData {
+        const data: GifImageData = [];
+
+        let value: number;
+        do {
+            value = this.bytes.readUInt8(this.cursor++);
+            data.push(value);
+        } while (value !== 0);
+
+        return data;
+    }
+
+    private parseImageDescriptor(): GifImageDescriptor {
+        const imageDescriptor = this.bytes.slice(this.cursor, this.cursor + 9);
+        this.cursor += 9;
+
+        if (imageDescriptor.length !== 7) {
+            throw new Error('Error in parsing image descriptor, not enough bytes');
+        }
+
+        const packedFields = imageDescriptor.readUint8(8);
+        return {
+            leftPosition: imageDescriptor.readUInt16LE(0),
+            topPosition: imageDescriptor.readUInt16LE(2),
+            width: imageDescriptor.readUInt16LE(4),
+            height: imageDescriptor.readUInt16LE(6),
+            packedFields: {
+                localColorTableFlag: readBits(packedFields, 0, 1) === 1,
+                interlaceFlag: readBits(packedFields, 1, 2) === 1,
+                sortFlag: readBits(packedFields, 2, 3) === 1,
+                reserved: readBits(packedFields, 3, 5),
+                localColorTableSize: readBits(packedFields, 5, 8)
+            }
+        };
+    }
+
+    private parseGraphicRenderingBlock(): GifGraphicRenderingBlock {
+        const nextByte = this.bytes.readUInt8(this.cursor++);
+
+        switch (nextByte) {
+            case EXTENSION_INTRODUCER:
+                const extensionLabel = this.bytes.readUInt8(this.cursor++);
+                if (extensionLabel !== ExtensionLabel.PLAINTEXT_EXTENSION) {
+                    throw new Error('Error in parsing graphic rendering block, not a plaintext extension');
+                }
+
+                return this.parsePlainTextExtension();
+            case IMAGE_SEPARATOR:
+                return this.parseTableBasedImage();
+            default:
+                throw new Error(`Error in parsing graphic rendering block, unknown block type ${nextByte}`);
+        }
+    }
+
+    private parseDataSubBlocks<T>(subBlockParser: (subBlock: Buffer) => T): T[] {
+        const parsedBlocks: T[] = [];
+        for (
+            let nextBlockSize = this.bytes.readUInt8(this.cursor++);
+            nextBlockSize !== 0;
+            nextBlockSize = this.bytes.readUInt8(this.cursor++)
+        ) {
+            const block = this.bytes.slice(this.cursor, this.cursor + nextBlockSize);
+            parsedBlocks.push(subBlockParser(block));
+            this.cursor += nextBlockSize;
+        }
+
+        return parsedBlocks;
+    }
+
+    private parseCommentExtension(): GifCommentExtension {
+        const textParts = this.parseDataSubBlocks(subBlock => subBlock.toString('ascii'));
+        return {
+            extensionIntroducer: EXTENSION_INTRODUCER,
+            extensionLabel: ExtensionLabel.COMMENT_EXTENSION,
+            text: textParts.join(''),
+            blockTerminator: 0
+        };
+    }
+
+    private parsePlainTextExtension(): GifPlainTextExtension {
+        const blockSize = this.bytes.readUInt8(this.cursor++);
+        if (blockSize !== 12) {
+            console.warn('Warning in parsing plain text extension, block size not 12');
+        }
+
+        const metadataBytes = this.bytes.slice(this.cursor, this.cursor + 12);
+        this.cursor += 12;
+
+        if (metadataBytes.length !== 12) {
+            throw new Error('Error in parsing plain text extension, not enough bytes');
+        }
+
+        const textParts = this.parseDataSubBlocks(subBlock => subBlock.toString('ascii'));
+        return {
+            extensionIntroducer: EXTENSION_INTRODUCER,
+            extensionLabel: ExtensionLabel.PLAINTEXT_EXTENSION,
+            blockSize,
+            textGridLeftPosition: metadataBytes.readUint16LE(0),
+            textGridTopPosition: metadataBytes.readUint16LE(2),
+            textGridWidth: metadataBytes.readUint16LE(4),
+            textGridHeight: metadataBytes.readUint16LE(6),
+            characterCellWidth: metadataBytes.readUint8(8),
+            characterCellHeight: metadataBytes.readUint8(9),
+            textForegroundColorIndex: metadataBytes.readUint8(10),
+            textBackgroundColorIndex: metadataBytes.readUint8(11),
+            text: textParts.join(''),
+            blockTerminator: 0
+        };
+    }
+
+    private parseApplicationExtension(): GifApplicationExtension {
+        const blockSize = this.bytes.readUInt8(this.cursor++);
+        if (blockSize !== 11) {
+            console.warn('Warning in parsing application extension, block size not 11');
+        }
+
+        const metadataBytes = this.bytes.slice(this.cursor, this.cursor + 11);
+        this.cursor += 11;
+
+        if (metadataBytes.length !== 11) {
+            throw new Error('Error in parsing application extension, not enough bytes');
+        }
+
+        const dataParts = this.parseDataSubBlocks(subBlock => [...subBlock]);
+        return {
+            extensionIntroducer: EXTENSION_INTRODUCER,
+            extensionLabel: ExtensionLabel.APPLICATION_EXTENSION,
+            blockSize,
+            applicationIdentifier: metadataBytes.slice(0, 8).toString('ascii'),
+            applicationAuthenticationCode: [...metadataBytes.slice(8, 11)],
+            data: dataParts.flat(),
+            blockTerminator: 0
+        };
+    }
+
+    private parseExtension(): GifData {
+        const extensionLabel = this.bytes.readUInt8(this.cursor++);
+        switch (extensionLabel) {
+            case ExtensionLabel.GRAPHIC_CONTROL_EXTENSION:
+                const block: GifGraphicBlock = {
+                    graphicControlExtension: this.parseGraphicControlExtension(),
+                    graphicRenderingBlock: this.parseGraphicRenderingBlock()
+                };
+                return block;
+            case ExtensionLabel.COMMENT_EXTENSION:
+                return this.parseCommentExtension();
+            case ExtensionLabel.PLAINTEXT_EXTENSION:
+                return this.parsePlainTextExtension();
+            case ExtensionLabel.APPLICATION_EXTENSION:
+                return this.parseApplicationExtension();
+            default:
+                throw new Error(`Invalid extension label ${extensionLabel}`);
+        }
+    }
+
+    private parseData(): GifData[] {
+        const data: GifData[] = [];
+
+        const nextByte = this.bytes.readUInt8(this.cursor++);
+
+        switch (nextByte) {
+            case EXTENSION_INTRODUCER:
+                const block = this.parseExtension();
+                data.push(block);
+                break;
+            case IMAGE_SEPARATOR:
+                const graphicBlock: GifGraphicBlock = {
+                    graphicControlExtension: null,
+                    graphicRenderingBlock: this.parseGraphicRenderingBlock()
+                };
+                data.push(graphicBlock);
+                break;
+            default:
+                throw new Error(`Invalid data first byte ${nextByte}`);
+        }
+
+        return data;
     }
 }

@@ -16,6 +16,12 @@ export interface GifLogicalScreen {
     globalColorTable: GifColorTable | null;
 }
 
+export interface GifExtension {
+    extensionIntroducer: number;
+    extensionLabel: number;
+    blockTerminator: number;
+}
+
 export interface GifLogicalScreenDescriptor {
     width: number;
     height: number;
@@ -43,7 +49,17 @@ export interface GifGraphicBlock {
     graphicRenderingBlock: GifGraphicRenderingBlock;
 }
 
-export type GifGraphicControlExtension = {};
+export interface GifGraphicControlExtension extends GifExtension {
+    blockSize: number;
+    packedFields: {
+        reserved: number;
+        disposalMethod: number;
+        userInputFlag: boolean;
+        transparentColorFlag: boolean;
+    };
+    delayTime: number;
+    transparentColorIndex: number;
+}
 
 export type GifGraphicRenderingBlock = GifTableBasedImage | GifPlainTextExtension;
 
@@ -53,13 +69,32 @@ export interface GifTableBasedImage {
     imageData: GifImageData;
 }
 
-export type GifImageData = {};
-export type GifPlainTextExtension = {};
+export type GifImageData = number[];
+export interface GifPlainTextExtension extends GifExtension {
+    blockSize: number;
+    textGridLeftPosition: number;
+    textGridTopPosition: number;
+    textGridWidth: number;
+    textGridHeight: number;
+    characterCellWidth: number;
+    characterCellHeight: number;
+    textForegroundColorIndex: number;
+    textBackgroundColorIndex: number;
+    text: string;
+}
 
 export type GifSpecialPurposeBlock = GifApplicationExtension | GifCommentExtension;
 
-export type GifApplicationExtension = {};
-export type GifCommentExtension = {};
+export interface GifApplicationExtension extends GifExtension {
+    blockSize: number;
+    applicationIdentifier: string;
+    applicationAuthenticationCode: number[];
+    data: number[];
+}
+
+export interface GifCommentExtension extends GifExtension {
+    text: string;
+}
 
 export interface GifImageDescriptor {
     leftPosition: number;
@@ -70,6 +105,7 @@ export interface GifImageDescriptor {
         localColorTableFlag: boolean;
         interlaceFlag: boolean;
         sortFlag: boolean;
+        reserved: number;
         localColorTableSize: number;
     };
 }
