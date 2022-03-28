@@ -2,6 +2,7 @@ import {
     GifApplicationExtension,
     GifColorTable,
     GifCommentExtension,
+    GifExtension,
     GifGraphicControlExtension,
     GifImageData,
     GifImageDescriptor,
@@ -13,7 +14,6 @@ export interface GifDataStream {
     header: GifHeader;
     logicalScreen: GifLogicalScreen;
     data: GifData[];
-    trailer: GifTrailer;
 }
 
 export interface GifHeader {
@@ -30,10 +30,11 @@ export type GifData = GifGraphicBlock | GifSpecialPurposeBlock;
 
 export interface GifGraphicBlock {
     graphicControlExtension: GifGraphicControlExtension | null;
+    otherExtensions: GifExtension[];
     graphicRenderingBlock: GifGraphicRenderingBlock;
 }
 
-export type GifGraphicRenderingBlock = GifTableBasedImage | GifPlainTextExtension | GifApplicationExtension;
+export type GifGraphicRenderingBlock = GifTableBasedImage | GifPlainTextExtension;
 
 export interface GifTableBasedImage {
     imageDescriptor: GifImageDescriptor;
@@ -42,5 +43,3 @@ export interface GifTableBasedImage {
 }
 
 export type GifSpecialPurposeBlock = GifApplicationExtension | GifCommentExtension;
-
-export type GifTrailer = number;

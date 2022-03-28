@@ -12,7 +12,8 @@ import {
     GifImageData,
     GifCommentExtension,
     GifPlainTextExtension,
-    GifApplicationExtension
+    GifApplicationExtension,
+    GifExtension
 } from '@/types';
 import { ExtensionLabel, EXTENSION_INTRODUCER, IMAGE_SEPARATOR, TRAILER, Version } from './constants';
 import { readBits } from './parsing';
@@ -58,7 +59,6 @@ export class GifAnalyzer {
             ? this.parseColorTable(this.globalColorTableSize)
             : null;
         this._rfcParts.data = this.parseData();
-        this._rfcParts.trailer = TRAILER;
     }
 
     private parseHeaderSignature(): string {
@@ -225,29 +225,6 @@ export class GifAnalyzer {
         };
     }
 
-    private parseGraphicRenderingBlock(): GifGraphicRenderingBlock {
-        const nextByte = this.bytes.readUInt8(this.cursor++);
-
-        switch (nextByte) {
-            case EXTENSION_INTRODUCER:
-                const extensionLabel = this.bytes.readUInt8(this.cursor++);
-                switch (extensionLabel) {
-                    case ExtensionLabel.PLAINTEXT_EXTENSION:
-                        return this.parsePlainTextExtension();
-                    case ExtensionLabel.APPLICATION_EXTENSION:
-                        return this.parseApplicationExtension();
-                    default:
-                        throw new Error(
-                            `Error in parsing graphic rendering block, not an allowed extension ${extensionLabel}`
-                        );
-                }
-            case IMAGE_SEPARATOR:
-                return this.parseTableBasedImage();
-            default:
-                throw new Error(`Error in parsing graphic rendering block, unknown block type ${nextByte}`);
-        }
-    }
-
     private parseDataSubBlocks<T>(subBlockParser: (subBlock: Buffer) => T): T[] {
         const parsedBlocks: T[] = [];
         for (
@@ -329,29 +306,62 @@ export class GifAnalyzer {
         };
     }
 
+    private parseGraphicBlock(withExtensions: boolean): GifGraphicBlock {
+        const graphicControlExtension = withExtensions ? this.parseGraphicControlExtension() : null;
+        const otherExtensions: GifExtension[] = [];
+        let graphicRenderingBlock: GifGraphicRenderingBlock;
+
+        if (withExtensions) {
+            let nextByte: number, extensionLabel: number;
+            for (
+                nextByte = this.bytes.readUInt8(this.cursor++);
+                nextByte === EXTENSION_INTRODUCER;
+                nextByte = this.bytes.readUInt8(this.cursor++)
+            ) {
+                extensionLabel = this.bytes.readUInt8(this.cursor);
+
+                if (extensionLabel === ExtensionLabel.PLAINTEXT_EXTENSION) {
+                    break;
+                }
+
+                otherExtensions.push(this.parseExtension() as GifExtension);
+            }
+
+            switch (nextByte) {
+                case EXTENSION_INTRODUCER:
+                    const _extensionLabel = this.bytes.readUInt8(this.cursor++);
+                    graphicRenderingBlock = this.parsePlainTextExtension();
+                    break;
+                case IMAGE_SEPARATOR:
+                    graphicRenderingBlock = this.parseTableBasedImage();
+                    break;
+                default:
+                    throw new Error(`Error in parsing graphic rendering block, unknown block type ${nextByte}`);
+            }
+        } else {
+            graphicRenderingBlock = this.parseTableBasedImage();
+        }
+
+        return {
+            graphicControlExtension,
+            otherExtensions,
+            graphicRenderingBlock
+        };
+    }
+
     private parseExtension(): GifData {
         const extensionLabel = this.bytes.readUInt8(this.cursor++);
         switch (extensionLabel) {
-            case ExtensionLabel.GRAPHIC_CONTROL_EXTENSION: {
-                const block: GifGraphicBlock = {
-                    graphicControlExtension: this.parseGraphicControlExtension(),
-                    graphicRenderingBlock: this.parseGraphicRenderingBlock()
-                };
-                return block;
-            }
+            case ExtensionLabel.GRAPHIC_CONTROL_EXTENSION:
+                return this.parseGraphicBlock(true);
             case ExtensionLabel.COMMENT_EXTENSION:
                 return this.parseCommentExtension();
             case ExtensionLabel.PLAINTEXT_EXTENSION:
                 return this.parsePlainTextExtension();
             case ExtensionLabel.APPLICATION_EXTENSION:
                 return this.parseApplicationExtension();
-            case IMAGE_SEPARATOR: {
-                const block: GifGraphicBlock = {
-                    graphicControlExtension: null,
-                    graphicRenderingBlock: this.parseTableBasedImage()
-                };
-                return block;
-            }
+            case IMAGE_SEPARATOR:
+                return this.parseGraphicBlock(false);
             default:
                 throw new Error(`Error in parsing extension, unknown extension label ${extensionLabel}`);
         }
@@ -367,15 +377,10 @@ export class GifAnalyzer {
         ) {
             switch (nextByte) {
                 case EXTENSION_INTRODUCER:
-                    const block = this.parseExtension();
-                    data.push(block);
+                    data.push(this.parseExtension());
                     break;
                 case IMAGE_SEPARATOR:
-                    const graphicBlock: GifGraphicBlock = {
-                        graphicControlExtension: null,
-                        graphicRenderingBlock: this.parseTableBasedImage()
-                    };
-                    data.push(graphicBlock);
+                    data.push(this.parseGraphicBlock(false));
                     break;
                 default:
                     throw new Error(`Invalid data first byte ${nextByte}`);
