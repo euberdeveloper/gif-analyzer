@@ -58,6 +58,7 @@ export class GifAnalyzer {
             ? this.parseColorTable(this.globalColorTableSize)
             : null;
         this._rfcParts.data = this.parseData();
+        this._rfcParts.trailer = TRAILER;
     }
 
     private parseHeaderSignature(): string {
