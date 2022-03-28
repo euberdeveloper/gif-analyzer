@@ -185,23 +185,19 @@ export class GifAnalyzer {
         return {
             imageDescriptor,
             localColorTable: imageDescriptor.packedFields.localColorTableFlag
-                ? this.parseColorTable(imageDescriptor.packedFields.localColorTableSize)
+                ? this.parseColorTable(2 ** (imageDescriptor.packedFields.localColorTableSize + 1))
                 : null,
             imageData: this.parseImageData()
         };
     }
 
     private parseImageData(): GifImageData {
-        const data: GifImageData = [];
-
-        for (
-            let value = this.bytes.readUInt8(this.cursor++);
-            value !== 0;
-            value = this.bytes.readUInt8(this.cursor++)
-        ) {
-            data.push(value);
-        }
-        return data;
+        const lzwMinimumCodeSize = this.bytes.readUInt8(this.cursor++);
+        const dataParts = this.parseDataSubBlocks(subBlock => [...subBlock]);
+        return {
+            lzwMinimumCodeSize,
+            data: dataParts.flat()
+        };
     }
 
     private parseImageDescriptor(): GifImageDescriptor {
@@ -376,7 +372,7 @@ export class GifAnalyzer {
                 case IMAGE_SEPARATOR:
                     const graphicBlock: GifGraphicBlock = {
                         graphicControlExtension: null,
-                        graphicRenderingBlock: this.parseGraphicRenderingBlock()
+                        graphicRenderingBlock: this.parseTableBasedImage()
                     };
                     data.push(graphicBlock);
                     break;

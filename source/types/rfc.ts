@@ -69,7 +69,10 @@ export interface GifTableBasedImage {
     imageData: GifImageData;
 }
 
-export type GifImageData = number[];
+export type GifImageData = {
+    lzwMinimumCodeSize: number;
+    data: number[];
+};
 export interface GifPlainTextExtension extends GifExtension {
     blockSize: number;
     textGridLeftPosition: number;
