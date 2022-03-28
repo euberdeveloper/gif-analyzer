@@ -5,6 +5,7 @@ export enum Version {
 
 export const IMAGE_SEPARATOR = 0x2c;
 export const EXTENSION_INTRODUCER = 0x21;
+export const TRAILER = 0x3b;
 
 export enum ExtensionLabel {
     GRAPHIC_CONTROL_EXTENSION = 0xf9,

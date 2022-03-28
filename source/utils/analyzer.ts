@@ -14,7 +14,7 @@ import {
     GifPlainTextExtension,
     GifApplicationExtension
 } from '@/types';
-import { ExtensionLabel, EXTENSION_INTRODUCER, IMAGE_SEPARATOR, Version } from './constants';
+import { ExtensionLabel, EXTENSION_INTRODUCER, IMAGE_SEPARATOR, TRAILER, Version } from './constants';
 import { readBits } from './parsing';
 
 export * from './constants';
@@ -194,12 +194,13 @@ export class GifAnalyzer {
     private parseImageData(): GifImageData {
         const data: GifImageData = [];
 
-        let value: number;
-        do {
-            value = this.bytes.readUInt8(this.cursor++);
+        for (
+            let value = this.bytes.readUInt8(this.cursor++);
+            value !== 0;
+            value = this.bytes.readUInt8(this.cursor++)
+        ) {
             data.push(value);
-        } while (value !== 0);
-
+        }
         return data;
     }
 
@@ -207,7 +208,7 @@ export class GifAnalyzer {
         const imageDescriptor = this.bytes.slice(this.cursor, this.cursor + 9);
         this.cursor += 9;
 
-        if (imageDescriptor.length !== 7) {
+        if (imageDescriptor.length !== 9) {
             throw new Error('Error in parsing image descriptor, not enough bytes');
         }
 
@@ -334,43 +335,54 @@ export class GifAnalyzer {
     private parseExtension(): GifData {
         const extensionLabel = this.bytes.readUInt8(this.cursor++);
         switch (extensionLabel) {
-            case ExtensionLabel.GRAPHIC_CONTROL_EXTENSION:
-                const merda = this.parseGraphicControlExtension();
+            case ExtensionLabel.GRAPHIC_CONTROL_EXTENSION: {
                 const block: GifGraphicBlock = {
-                    graphicControlExtension: merda,
+                    graphicControlExtension: this.parseGraphicControlExtension(),
                     graphicRenderingBlock: this.parseGraphicRenderingBlock()
                 };
                 return block;
+            }
             case ExtensionLabel.COMMENT_EXTENSION:
                 return this.parseCommentExtension();
             case ExtensionLabel.PLAINTEXT_EXTENSION:
                 return this.parsePlainTextExtension();
             case ExtensionLabel.APPLICATION_EXTENSION:
                 return this.parseApplicationExtension();
+            case IMAGE_SEPARATOR: {
+                const block: GifGraphicBlock = {
+                    graphicControlExtension: null,
+                    graphicRenderingBlock: this.parseTableBasedImage()
+                };
+                return block;
+            }
             default:
-                throw new Error(`Invalid extension label ${extensionLabel}`);
+                throw new Error(`Error in parsing extension, unknown extension label ${extensionLabel}`);
         }
     }
 
     private parseData(): GifData[] {
         const data: GifData[] = [];
 
-        const nextByte = this.bytes.readUInt8(this.cursor++);
-
-        switch (nextByte) {
-            case EXTENSION_INTRODUCER:
-                const block = this.parseExtension();
-                data.push(block);
-                break;
-            case IMAGE_SEPARATOR:
-                const graphicBlock: GifGraphicBlock = {
-                    graphicControlExtension: null,
-                    graphicRenderingBlock: this.parseGraphicRenderingBlock()
-                };
-                data.push(graphicBlock);
-                break;
-            default:
-                throw new Error(`Invalid data first byte ${nextByte}`);
+        for (
+            let nextByte = this.bytes.readUInt8(this.cursor++);
+            nextByte !== TRAILER;
+            nextByte = this.bytes.readUInt8(this.cursor++)
+        ) {
+            switch (nextByte) {
+                case EXTENSION_INTRODUCER:
+                    const block = this.parseExtension();
+                    data.push(block);
+                    break;
+                case IMAGE_SEPARATOR:
+                    const graphicBlock: GifGraphicBlock = {
+                        graphicControlExtension: null,
+                        graphicRenderingBlock: this.parseGraphicRenderingBlock()
+                    };
+                    data.push(graphicBlock);
+                    break;
+                default:
+                    throw new Error(`Invalid data first byte ${nextByte}`);
+            }
         }
 
         return data;
