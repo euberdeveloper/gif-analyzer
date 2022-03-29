@@ -13,12 +13,14 @@ import {
     GifCommentExtension,
     GifPlainTextExtension,
     GifApplicationExtension,
-    GifExtension
+    GifExtension,
+    ExtensionLabel,
+    EXTENSION_INTRODUCER,
+    IMAGE_SEPARATOR,
+    TRAILER,
+    Version
 } from '@/types';
-import { ExtensionLabel, EXTENSION_INTRODUCER, IMAGE_SEPARATOR, TRAILER, Version } from './constants';
 import { readBits } from './parsing';
-
-export * from './constants';
 
 export class GifAnalyzer {
     private static readonly VERSIONS = Object.values(Version);
