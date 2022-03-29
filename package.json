@@ -3,6 +3,12 @@
   "version": "1.0.0",
   "description": "An npm module to decompose a GIF file into its RFC parts",
   "main": "index.js",
+  "files": [
+    "package.json",
+    "bundled",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "clean": "shx rm -rf dist bundled",
     "pretranspile": "npm run clean",
@@ -10,8 +16,7 @@
     "prebundle": "npm run clean",
     "bundle": "webpack",
     "lint": "eslint source --ext ts --format codeframe",
-    "lint:fix": "eslint source --ext ts --format codeframe --fix",
-    "serve": "npm run transpile && node dist"
+    "lint:fix": "eslint source --ext ts --format codeframe --fix"
   },
   "repository": {
     "type": "git",
