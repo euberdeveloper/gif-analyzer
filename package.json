@@ -1,6 +1,6 @@
 {
   "name": "gif-analyzer",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "An npm module to decompose a GIF file into its RFC parts",
   "main": "bundled/index.js",
   "types": "bundled/index.d.ts",
