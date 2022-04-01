@@ -6,3 +6,5 @@ export * from './uint32LEBufferMirror';
 export * from './uint32BEBufferMirror';
 export * from './uint64LEBufferMirror';
 export * from './uint64BEBufferMirror';
+export * from './stringBufferMirror';
+export * from './booleanBufferMirror';

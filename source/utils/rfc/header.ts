@@ -1,4 +1,4 @@
-import { StringBufferMirror } from '../bufferMirror/stringBufferMirror';
+import { StringBufferMirror } from '../bufferMirror';
 
 export class GifHeader {
     public signature: StringBufferMirror;

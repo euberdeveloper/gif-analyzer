@@ -7,4 +7,4 @@ import * as fs from 'fs';
 moduleAlias.addAlias('@', path.join(process.cwd(), 'dist'));
 import { GifAnalyzer } from '@/utils/analyzer';
 const gif = new GifAnalyzer(fs.readFileSync('./test.gif'));
-console.log(gif.parsedValue);
+console.log(gif.value);
