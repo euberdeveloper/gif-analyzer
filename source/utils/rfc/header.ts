@@ -1,5 +1,15 @@
 import { StringBufferMirror } from '../bufferMirror';
 
+export interface GifHeaderRaw {
+    signature: Buffer;
+    version: Buffer;
+}
+
+export interface GifHeaderValue {
+    signature: string;
+    version: string;
+}
+
 export class GifHeader {
     public signature: StringBufferMirror;
     public version: StringBufferMirror;
@@ -19,5 +29,19 @@ export class GifHeader {
 
     get size(): number {
         return this.signature.size + this.version.size;
+    }
+
+    get raw(): GifHeaderRaw {
+        return {
+            signature: this.signature.bytes,
+            version: this.version.bytes
+        };
+    }
+
+    get value(): GifHeaderValue {
+        return {
+            signature: this.signature.value,
+            version: this.version.value
+        };
     }
 }

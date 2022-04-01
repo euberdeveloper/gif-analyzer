@@ -1,5 +1,21 @@
 import { ByteBufferMirror, Uint16LEBufferMirror } from '../bufferMirror';
 
+export interface GifLogicalScreenDescriptorRaw {
+    width: Buffer;
+    height: Buffer;
+    packedFields: Buffer;
+    backgroundColorIndex: Buffer;
+    pixelAspectRatio: Buffer;
+}
+
+export interface GifLogicalScreenDescriptorValue {
+    width: number;
+    height: number;
+    packedFields: any;
+    backgroundColorIndex: number;
+    pixelAspectRatio: number;
+}
+
 export class GifLogicalScreenDescriptor {
     public width: Uint16LEBufferMirror;
     public height: Uint16LEBufferMirror;
@@ -31,5 +47,26 @@ export class GifLogicalScreenDescriptor {
             this.backgroundColorIndex.size +
             this.pixelAspectRatio.size
         );
+    }
+
+    get raw(): GifLogicalScreenDescriptorRaw {
+        return {
+            width: this.width.bytes,
+            height: this.height.bytes,
+            packedFields: this.packedFields.bytes,
+            backgroundColorIndex: this.backgroundColorIndex.bytes,
+            pixelAspectRatio: this.pixelAspectRatio.bytes
+        };
+    }
+
+    get value(): GifLogicalScreenDescriptorValue {
+        return {
+            width: this.width.value,
+            height: this.height.value,
+
+            packedFields: this.packedFields.value,
+            backgroundColorIndex: this.backgroundColorIndex.value,
+            pixelAspectRatio: this.pixelAspectRatio.value
+        };
     }
 }

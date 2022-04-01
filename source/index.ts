@@ -8,3 +8,4 @@ moduleAlias.addAlias('@', path.join(process.cwd(), 'dist'));
 import { GifAnalyzer } from '@/utils/analyzer';
 const gif = new GifAnalyzer(fs.readFileSync('./test.gif'));
 console.log(gif.value);
+console.log(gif.raw);
