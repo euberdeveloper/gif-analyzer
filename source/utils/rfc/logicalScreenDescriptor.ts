@@ -1,4 +1,8 @@
 import { ByteBufferMirror, Uint16LEBufferMirror } from '../bufferMirror';
+import {
+    LogicalDescriptorPackedFields,
+    ScreenLogicalDescriptorPackedFieldsBufferMirror
+} from '../bufferMirror/screenLogicalDescriptorPackedFieldsBufferMirror';
 
 export interface GifLogicalScreenDescriptorRaw {
     width: Buffer;
@@ -11,7 +15,7 @@ export interface GifLogicalScreenDescriptorRaw {
 export interface GifLogicalScreenDescriptorValue {
     width: number;
     height: number;
-    packedFields: any;
+    packedFields: LogicalDescriptorPackedFields;
     backgroundColorIndex: number;
     pixelAspectRatio: number;
 }
@@ -19,7 +23,7 @@ export interface GifLogicalScreenDescriptorValue {
 export class GifLogicalScreenDescriptor {
     public width: Uint16LEBufferMirror;
     public height: Uint16LEBufferMirror;
-    public packedFields: ByteBufferMirror;
+    public packedFields: ScreenLogicalDescriptorPackedFieldsBufferMirror;
     public backgroundColorIndex: ByteBufferMirror;
     public pixelAspectRatio: ByteBufferMirror;
 
@@ -30,7 +34,7 @@ export class GifLogicalScreenDescriptor {
     private parseBytes(gifBytes: Buffer, offset: number): void {
         this.width = new Uint16LEBufferMirror(gifBytes.slice(offset, offset + 2));
         this.height = new Uint16LEBufferMirror(gifBytes.slice(offset + 2, offset + 4));
-        this.packedFields = new ByteBufferMirror(gifBytes.slice(offset + 4, offset + 5));
+        this.packedFields = new ScreenLogicalDescriptorPackedFieldsBufferMirror(gifBytes.slice(offset + 4, offset + 5));
         this.backgroundColorIndex = new ByteBufferMirror(gifBytes.slice(offset + 5, offset + 6));
         this.pixelAspectRatio = new ByteBufferMirror(gifBytes.slice(offset + 6, offset + 7));
     }
@@ -63,7 +67,6 @@ export class GifLogicalScreenDescriptor {
         return {
             width: this.width.value,
             height: this.height.value,
-
             packedFields: this.packedFields.value,
             backgroundColorIndex: this.backgroundColorIndex.value,
             pixelAspectRatio: this.pixelAspectRatio.value
