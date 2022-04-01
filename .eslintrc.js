@@ -9,5 +9,8 @@ module.exports = {
         'plugin:@euberdeveloper/typescript',
         'plugin:@euberdeveloper/unicorn',
         'plugin:@euberdeveloper/prettier'
-    ]
+    ],
+    rules: {
+        'unicorn/filename-case': 'off'
+    }
 };
