@@ -8,3 +8,5 @@ export * from './uint64LEBufferMirror';
 export * from './uint64BEBufferMirror';
 export * from './stringBufferMirror';
 export * from './booleanBufferMirror';
+
+export * from './screenLogicalDescriptorPackedFieldsBufferMirror';

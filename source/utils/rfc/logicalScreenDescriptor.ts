@@ -1,8 +1,9 @@
-import { ByteBufferMirror, Uint16LEBufferMirror } from '../bufferMirror';
 import {
+    ByteBufferMirror,
+    Uint16LEBufferMirror,
     LogicalDescriptorPackedFields,
     ScreenLogicalDescriptorPackedFieldsBufferMirror
-} from '../bufferMirror/screenLogicalDescriptorPackedFieldsBufferMirror';
+} from '../bufferMirror';
 
 export interface GifLogicalScreenDescriptorRaw {
     width: Buffer;
