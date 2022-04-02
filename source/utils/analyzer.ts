@@ -1,4 +1,4 @@
-import { ExtensionLabel, EXTENSION_INTRODUCER, IMAGE_SEPARATOR, TRAILER } from '@/types';
+import { ExtensionLabel, EXTENSION_INTRODUCER, TRAILER } from '@/types';
 import {
     GifData,
     GifHeader,
@@ -97,7 +97,7 @@ export class GifAnalyzer {
                 case EXTENSION_INTRODUCER:
                     data.push(this.parseExtension());
                     break;
-                case IMAGE_SEPARATOR:
+                case ExtensionLabel.IMAGE_SEPARATOR:
                     this.cursor++;
                     data.push(this.parseGraphicBlock(false));
                     break;
@@ -118,7 +118,7 @@ export class GifAnalyzer {
                 return this.parseCommentExtension();
             case ExtensionLabel.APPLICATION_EXTENSION:
                 return this.parseApplicationExtension();
-            case IMAGE_SEPARATOR:
+            case ExtensionLabel.IMAGE_SEPARATOR:
                 this.cursor++;
                 return this.parseGraphicBlock(false);
             default:
@@ -152,7 +152,7 @@ export class GifAnalyzer {
                 case EXTENSION_INTRODUCER:
                     graphicRenderingBlock = this.parsePlainTextExtension();
                     break;
-                case IMAGE_SEPARATOR:
+                case ExtensionLabel.IMAGE_SEPARATOR:
                     graphicRenderingBlock = this.parseTableBasedImage();
                     break;
                 default:
