@@ -67,7 +67,20 @@ export class GifPlainTextExtension extends GifExtension {
     }
 
     get size(): number {
-        return this.introducer.size + this.label.size + this.blockTerminator.size;
+        return (
+            this.introducer.size +
+            this.label.size +
+            this.textGridLeftPosition.size +
+            this.textGridTopPosition.size +
+            this.textGridWidth.size +
+            this.textGridHeight.size +
+            this.characterCellWidth.size +
+            this.characterCellHeight.size +
+            this.textForegroundColor.size +
+            this.textBackgroundColor.size +
+            this.text.size +
+            this.blockTerminator.size
+        );
     }
 
     get raw(): GifPlainTextExtensionRaw {

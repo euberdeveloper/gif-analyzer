@@ -45,7 +45,14 @@ export class GifApplicationExtension extends GifExtension {
     }
 
     get size(): number {
-        return this.introducer.size + this.label.size + this.blockTerminator.size;
+        return (
+            this.introSize +
+            this.blockSize.size +
+            this.applicationIdentifier.size +
+            this.applicationAuthenticationCode.size +
+            this.applicationData.size +
+            this.blockTerminator.size
+        );
     }
 
     get raw(): GifApplicationExtensionRaw {

@@ -31,7 +31,7 @@ export class GifCommentExtension extends GifExtension {
     }
 
     get size(): number {
-        return this.introducer.size + this.label.size + this.blockTerminator.size;
+        return this.introducer.size + this.comment.size + this.blockTerminator.size;
     }
 
     get raw(): GifCommentExtensionRaw {
