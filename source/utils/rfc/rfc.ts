@@ -5,11 +5,13 @@ import {
     GifLogicalScreenDescriptorRaw,
     GifLogicalScreenDescriptorValue
 } from './logicalScreenDescriptor';
+import { GifColor, GifColorRaw, GifColorValue } from './colorTable';
 
 export interface GifRfc {
     header: GifHeader;
     logicalScreen: {
         descriptor: GifLogicalScreenDescriptor;
+        globalColorTable: GifColor[] | null;
     };
 }
 
@@ -17,6 +19,7 @@ export class GifRfcRaw {
     public header: GifHeaderRaw;
     public logicalScreen: {
         descriptor: GifLogicalScreenDescriptorRaw;
+        globalColorTable: GifColorRaw[] | null;
     };
 }
 
@@ -24,11 +27,14 @@ export interface GifRfcValue {
     header: GifHeaderValue;
     logicalScreen: {
         descriptor: GifLogicalScreenDescriptorValue;
+        globalColorTable: GifColorValue[] | null;
     };
 }
 
 function _rfcToRaw(data: any): any {
-    if (data instanceof BufferMirror) {
+    if (data === null) {
+        return null;
+    } else if (data instanceof BufferMirror) {
         return data.bytes;
     } else if (Array.isArray(data)) {
         return data.map(d => _rfcToRaw(d));
@@ -46,7 +52,9 @@ export function rfcToRaw(data: GifRfc): GifRfcRaw {
 }
 
 function _rfcToValue(data: any): any {
-    if (data instanceof BufferMirror) {
+    if (data === null) {
+        return null;
+    } else if (data instanceof BufferMirror) {
         return data.value;
     } else if (Array.isArray(data)) {
         return data.map(d => _rfcToValue(d));

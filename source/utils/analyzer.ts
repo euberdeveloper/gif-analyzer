@@ -1,4 +1,13 @@
-import { GifHeader, GifRfc, GifLogicalScreenDescriptor, GifRfcValue, rfcToValue, GifRfcRaw, rfcToRaw } from './rfc';
+import {
+    GifHeader,
+    GifRfc,
+    GifLogicalScreenDescriptor,
+    GifRfcValue,
+    rfcToValue,
+    GifRfcRaw,
+    rfcToRaw,
+    GifColor
+} from './rfc';
 
 export class GifAnalyzer {
     private readonly bytes: Buffer;
@@ -21,9 +30,7 @@ export class GifAnalyzer {
         this.bytes = bytes;
         this._rfc = {
             header: this.parseHeader(),
-            logicalScreen: {
-                descriptor: this.parseLogicalScreenDescriptor()
-            }
+            logicalScreen: this.parseLogicalScreen()
         };
     }
 
@@ -33,9 +40,35 @@ export class GifAnalyzer {
         return result;
     }
 
+    private parseLogicalScreen(): { descriptor: GifLogicalScreenDescriptor; globalColorTable: GifColor[] | null } {
+        const descriptor = this.parseLogicalScreenDescriptor();
+        const globalColorTable = this.parseGlobalColorTable(
+            descriptor.packedFields.value.globalColorTableFlag,
+            descriptor.packedFields.value.globalColorTableSize
+        );
+        return { descriptor, globalColorTable };
+    }
+
     private parseLogicalScreenDescriptor(): GifLogicalScreenDescriptor {
         const result = new GifLogicalScreenDescriptor(this.bytes, this.cursor);
         this.cursor += result.size;
         return result;
+    }
+
+    private parseGlobalColorTable(exists: boolean, size: number): GifColor[] | null {
+        if (exists) {
+            const handledSize = 2 ** size;
+            const colorTable: GifColor[] = [];
+
+            for (let i = 0; i < handledSize; i++) {
+                const color = new GifColor(this.bytes, this.cursor);
+                colorTable.push(color);
+                this.cursor += color.size;
+            }
+
+            return colorTable;
+        } else {
+            return null;
+        }
     }
 }
