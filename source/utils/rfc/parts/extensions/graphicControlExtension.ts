@@ -32,6 +32,10 @@ export class GifGraphicControlExtension extends GifExtension {
     }
 
     private parseBytes(gifBytes: Buffer, offset: number): void {
+        this.blockSize = new ByteBufferMirror(gifBytes.slice(offset, offset + 1));
+        this.packedFields = new ScreenLogicalDescriptorPackedFieldsBufferMirror(gifBytes.slice(offset + 1, offset + 2));
+        this.delayTime = new Uint16LEBufferMirror(gifBytes.slice(offset + 2, offset + 4));
+        this.transparentColorIndex = new ByteBufferMirror(gifBytes.slice(offset + 4, offset + 5));
         this.parseTerminator(gifBytes, offset + 5);
     }
 
