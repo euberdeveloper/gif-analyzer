@@ -1,5 +1,5 @@
 import { EXTENSION_INTRODUCER } from '@/types';
-import { ByteBufferMirror, StringBufferMirror } from '../bufferMirror';
+import { ByteBufferMirror, StringBufferMirror } from '@/utils/bufferMirror';
 
 export interface GifExtensionRaw {
     introducer: Buffer;
@@ -41,4 +41,5 @@ export abstract class GifExtension {
 
     abstract get raw(): GifExtensionRaw;
     abstract get value(): GifExtensionValue;
+    abstract get size(): number;
 }

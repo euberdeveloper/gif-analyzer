@@ -1,9 +1,9 @@
 import {
     ByteBufferMirror,
     Uint16LEBufferMirror,
-    LogicalDescriptorPackedFields,
-    ScreenLogicalDescriptorPackedFieldsBufferMirror
-} from '../bufferMirror';
+    ImageDescriptorPackedFieldsBufferMirror,
+    ImageDescriptorPackedFields
+} from '@/utils/bufferMirror';
 
 export interface GifImageDescriptorRaw {
     width: Buffer;
@@ -16,7 +16,7 @@ export interface GifImageDescriptorRaw {
 export interface GifImageDescriptorValue {
     width: number;
     height: number;
-    packedFields: LogicalDescriptorPackedFields;
+    packedFields: ImageDescriptorPackedFields;
     backgroundColorIndex: number;
     pixelAspectRatio: number;
 }
@@ -24,7 +24,7 @@ export interface GifImageDescriptorValue {
 export class GifImageDescriptor {
     public width: Uint16LEBufferMirror;
     public height: Uint16LEBufferMirror;
-    public packedFields: ScreenLogicalDescriptorPackedFieldsBufferMirror;
+    public packedFields: ImageDescriptorPackedFieldsBufferMirror;
     public backgroundColorIndex: ByteBufferMirror;
     public pixelAspectRatio: ByteBufferMirror;
 
@@ -35,7 +35,7 @@ export class GifImageDescriptor {
     private parseBytes(gifBytes: Buffer, offset: number): void {
         this.width = new Uint16LEBufferMirror(gifBytes.slice(offset, offset + 2));
         this.height = new Uint16LEBufferMirror(gifBytes.slice(offset + 2, offset + 4));
-        this.packedFields = new ScreenLogicalDescriptorPackedFieldsBufferMirror(gifBytes.slice(offset + 4, offset + 5));
+        this.packedFields = new ImageDescriptorPackedFieldsBufferMirror(gifBytes.slice(offset + 4, offset + 5));
         this.backgroundColorIndex = new ByteBufferMirror(gifBytes.slice(offset + 5, offset + 6));
         this.pixelAspectRatio = new ByteBufferMirror(gifBytes.slice(offset + 6, offset + 7));
     }

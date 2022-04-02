@@ -1,4 +1,4 @@
-import { ByteBufferMirror } from '../bufferMirror';
+import { ByteBufferMirror } from '@/utils/bufferMirror';
 
 export interface GifColorRaw {
     red: Buffer;

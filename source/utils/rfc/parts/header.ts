@@ -1,4 +1,4 @@
-import { StringBufferMirror } from '../bufferMirror';
+import { StringBufferMirror } from '@/utils/bufferMirror';
 
 export interface GifHeaderRaw {
     signature: Buffer;
