@@ -70,7 +70,7 @@ export class GifAnalyzer {
 
     private parseColorTable(exists: boolean, size: number): GifColor[] | null {
         if (exists) {
-            const handledSize = 2 ** size;
+            const handledSize = 2 ** (size + 1);
             const colorTable: GifColor[] = [];
 
             for (let i = 0; i < handledSize; i++) {
