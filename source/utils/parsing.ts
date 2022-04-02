@@ -11,6 +11,7 @@ export function getDataSubBlocksSize(bytes: Buffer, offset: number): number {
     for (const [_offset, subBlockSize] of iterateDataSubBlocks(bytes, offset)) {
         size += subBlockSize + 1;
     }
+    size += 1;
 
     return size;
 }
