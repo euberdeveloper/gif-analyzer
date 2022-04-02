@@ -5,7 +5,6 @@ import { GifExtension, GifExtensionRaw, GifExtensionValue } from './extension';
 
 export interface GifCommentExtensionRaw extends GifExtensionRaw {
     comment: Buffer;
-    blockTerminator: Buffer;
 }
 
 export interface GifCommentExtensionValue extends GifExtensionValue {
@@ -23,7 +22,6 @@ export class GifCommentExtension extends GifExtension {
     protected parseBytes(gifBytes: Buffer, offset: number): void {
         const commentSize = getDataSubBlocksSize(gifBytes, offset);
         this.comment = new StringSubBlocksBufferMirror(gifBytes.slice(offset, offset + commentSize));
-        this.parseTerminator(gifBytes, offset + commentSize);
     }
 
     get isValid(): boolean {
@@ -31,15 +29,14 @@ export class GifCommentExtension extends GifExtension {
     }
 
     get size(): number {
-        return this.introducer.size + this.comment.size + this.blockTerminator.size;
+        return this.introducer.size + this.comment.size;
     }
 
     get raw(): GifCommentExtensionRaw {
         return {
             introducer: this.introducer.bytes,
             label: this.label.bytes,
-            comment: this.comment.bytes,
-            blockTerminator: this.blockTerminator.bytes
+            comment: this.comment.bytes
         };
     }
 
@@ -47,8 +44,7 @@ export class GifCommentExtension extends GifExtension {
         return {
             introducer: this.introducer.value,
             label: this.label.value,
-            comment: this.comment.value,
-            blockTerminator: this.blockTerminator.value
+            comment: this.comment.value
         };
     }
 }

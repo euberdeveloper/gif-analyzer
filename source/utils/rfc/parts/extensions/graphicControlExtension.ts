@@ -11,6 +11,7 @@ export interface GifGraphicControlExtensionRaw extends GifExtensionRaw {
     packedFields: Buffer;
     delayTime: Buffer;
     transparentColorIndex: Buffer;
+    blockTerminator: Buffer;
 }
 
 export interface GifGraphicControlExtensionValue extends GifExtensionValue {
@@ -18,6 +19,7 @@ export interface GifGraphicControlExtensionValue extends GifExtensionValue {
     packedFields: GraphicControlBlockPackedFields;
     delayTime: number;
     transparentColorIndex: number;
+    blockTerminator: number;
 }
 
 export class GifGraphicControlExtension extends GifExtension {
@@ -25,6 +27,7 @@ export class GifGraphicControlExtension extends GifExtension {
     public packedFields: GraphicControlBlockPackedFieldsBufferMirror;
     public delayTime: Uint16LEBufferMirror;
     public transparentColorIndex: ByteBufferMirror;
+    public blockTerminator: ByteBufferMirror;
 
     constructor(gifBytes: Buffer, offset: number) {
         super(gifBytes, offset);
@@ -36,7 +39,7 @@ export class GifGraphicControlExtension extends GifExtension {
         this.packedFields = new GraphicControlBlockPackedFieldsBufferMirror(gifBytes.slice(offset + 1, offset + 2));
         this.delayTime = new Uint16LEBufferMirror(gifBytes.slice(offset + 2, offset + 4));
         this.transparentColorIndex = new ByteBufferMirror(gifBytes.slice(offset + 4, offset + 5));
-        this.parseTerminator(gifBytes, offset + 5);
+        this.blockTerminator = new ByteBufferMirror(gifBytes.slice(offset + 5, offset + 6));
     }
 
     get isValid(): boolean {

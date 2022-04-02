@@ -37,7 +37,6 @@ export class GifApplicationExtension extends GifExtension {
         const dataOffset = offset + 12;
         const dataSize = getDataSubBlocksSize(gifBytes, dataOffset);
         this.applicationData = new StringSubBlocksBufferMirror(gifBytes.slice(dataOffset, dataOffset + dataSize));
-        this.parseTerminator(gifBytes, dataOffset + dataSize);
     }
 
     get isValid(): boolean {
@@ -50,8 +49,7 @@ export class GifApplicationExtension extends GifExtension {
             this.blockSize.size +
             this.applicationIdentifier.size +
             this.applicationAuthenticationCode.size +
-            this.applicationData.size +
-            this.blockTerminator.size
+            this.applicationData.size
         );
     }
 
@@ -62,8 +60,7 @@ export class GifApplicationExtension extends GifExtension {
             blockSize: this.blockSize.bytes,
             applicationIdentifier: this.applicationIdentifier.bytes,
             applicationAuthenticationCode: this.applicationAuthenticationCode.bytes,
-            applicationData: this.applicationData.bytes,
-            blockTerminator: this.blockTerminator.bytes
+            applicationData: this.applicationData.bytes
         };
     }
 
@@ -74,8 +71,7 @@ export class GifApplicationExtension extends GifExtension {
             blockSize: this.blockSize.value,
             applicationIdentifier: this.applicationIdentifier.value,
             applicationAuthenticationCode: this.applicationAuthenticationCode.value,
-            applicationData: this.applicationData.value,
-            blockTerminator: this.blockTerminator.value
+            applicationData: this.applicationData.value
         };
     }
 }

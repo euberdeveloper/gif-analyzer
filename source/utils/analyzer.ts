@@ -132,13 +132,13 @@ export class GifAnalyzer {
         let graphicRenderingBlock: GifGraphicRenderingBlock;
 
         if (withExtensions) {
-            let nextByte: number, extensionLabel: number;
+            let nextByte: number;
             for (
                 nextByte = this.bytes.readUInt8(this.cursor);
                 nextByte === EXTENSION_INTRODUCER;
                 nextByte = this.bytes.readUInt8(this.cursor)
             ) {
-                extensionLabel = this.bytes.readUInt8(this.cursor);
+                const extensionLabel = this.bytes.readUInt8(this.cursor + 1);
 
                 if (extensionLabel === ExtensionLabel.PLAINTEXT_EXTENSION) {
                     break;
@@ -146,7 +146,6 @@ export class GifAnalyzer {
 
                 const extension = this.parseExtension() as GifExtension;
                 otherExtensions.push(extension);
-                this.cursor += extension.size;
             }
 
             switch (nextByte) {

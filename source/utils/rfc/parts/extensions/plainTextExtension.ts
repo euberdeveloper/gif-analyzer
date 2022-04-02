@@ -59,7 +59,6 @@ export class GifPlainTextExtension extends GifExtension {
         const textOffset = offset + 13;
         const textSize = getDataSubBlocksSize(gifBytes, textOffset);
         this.text = new StringSubBlocksBufferMirror(gifBytes.slice(textOffset, textOffset + textSize));
-        this.parseTerminator(gifBytes, textOffset + textSize);
     }
 
     get isValid(): boolean {
@@ -78,8 +77,7 @@ export class GifPlainTextExtension extends GifExtension {
             this.characterCellHeight.size +
             this.textForegroundColor.size +
             this.textBackgroundColor.size +
-            this.text.size +
-            this.blockTerminator.size
+            this.text.size
         );
     }
 
@@ -95,8 +93,7 @@ export class GifPlainTextExtension extends GifExtension {
             characterCellHeight: this.characterCellHeight.bytes,
             textForegroundColor: this.textForegroundColor.bytes,
             textBackgroundColor: this.textBackgroundColor.bytes,
-            text: this.text.bytes,
-            blockTerminator: this.blockTerminator.bytes
+            text: this.text.bytes
         };
     }
 
@@ -112,8 +109,7 @@ export class GifPlainTextExtension extends GifExtension {
             characterCellHeight: this.characterCellHeight.value,
             textForegroundColor: this.textForegroundColor.value,
             textBackgroundColor: this.textBackgroundColor.value,
-            text: this.text.value,
-            blockTerminator: this.blockTerminator.value
+            text: this.text.value
         };
     }
 }
