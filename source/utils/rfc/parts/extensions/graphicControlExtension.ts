@@ -1,8 +1,8 @@
 import {
     ByteBufferMirror,
     Uint16LEBufferMirror,
-    LogicalDescriptorPackedFields,
-    ScreenLogicalDescriptorPackedFieldsBufferMirror
+    GraphicControlBlockPackedFields,
+    GraphicControlBlockPackedFieldsBufferMirror
 } from '@/utils/bufferMirror';
 import { GifExtension, GifExtensionRaw, GifExtensionValue } from './extension';
 
@@ -15,14 +15,14 @@ export interface GifGraphicControlExtensionRaw extends GifExtensionRaw {
 
 export interface GifGraphicControlExtensionValue extends GifExtensionValue {
     blockSize: number;
-    packedFields: LogicalDescriptorPackedFields;
+    packedFields: GraphicControlBlockPackedFields;
     delayTime: number;
     transparentColorIndex: number;
 }
 
 export class GifGraphicControlExtension extends GifExtension {
     public blockSize: ByteBufferMirror;
-    public packedFields: ScreenLogicalDescriptorPackedFieldsBufferMirror;
+    public packedFields: GraphicControlBlockPackedFieldsBufferMirror;
     public delayTime: Uint16LEBufferMirror;
     public transparentColorIndex: ByteBufferMirror;
 
@@ -33,7 +33,7 @@ export class GifGraphicControlExtension extends GifExtension {
 
     private parseBytes(gifBytes: Buffer, offset: number): void {
         this.blockSize = new ByteBufferMirror(gifBytes.slice(offset, offset + 1));
-        this.packedFields = new ScreenLogicalDescriptorPackedFieldsBufferMirror(gifBytes.slice(offset + 1, offset + 2));
+        this.packedFields = new GraphicControlBlockPackedFieldsBufferMirror(gifBytes.slice(offset + 1, offset + 2));
         this.delayTime = new Uint16LEBufferMirror(gifBytes.slice(offset + 2, offset + 4));
         this.transparentColorIndex = new ByteBufferMirror(gifBytes.slice(offset + 4, offset + 5));
         this.parseTerminator(gifBytes, offset + 5);
