@@ -9,5 +9,7 @@ export * from './uint64BEBufferMirror';
 export * from './stringBufferMirror';
 export * from './booleanBufferMirror';
 
-export * from './screenLogicalDescriptorPackedFieldsBufferMirror';
 export * from './stringSubBlocksBufferMirror';
+export * from './screenLogicalDescriptorPackedFieldsBufferMirror';
+export * from './graphicControlBlockPackedFieldsBufferMirror';
+export * from './imageDescriptorPackedFieldsBufferMirror';

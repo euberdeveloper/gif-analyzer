@@ -1,20 +1,15 @@
 import { ExtensionLabel } from '@/types';
 import { StringSubBlocksBufferMirror } from '@/utils/bufferMirror';
 import { getDataSubBlocksSize } from '@/utils/parsing';
-import { GifExtension } from './extension';
+import { GifExtension, GifExtensionRaw, GifExtensionValue } from './extension';
 
-export interface GifCommentExtensionRaw {
-    introducer: Buffer;
-    label: Buffer;
+export interface GifCommentExtensionRaw extends GifExtensionRaw {
     comment: Buffer;
     blockTerminator: Buffer;
 }
 
-export interface GifCommentExtensionValue {
-    introducer: number;
-    label: ExtensionLabel;
+export interface GifCommentExtensionValue extends GifExtensionValue {
     comment: string;
-    blockTerminator: string;
 }
 
 export class GifCommentExtension extends GifExtension {

@@ -8,12 +8,7 @@ export interface LogicalDescriptorPackedFields {
     globalColorTableSize: number;
 }
 
-export class ScreenLogicalDescriptorPackedFieldsBufferMirror extends BufferMirror<{
-    globalColorTableFlag: boolean;
-    colorResolution: number;
-    sortFlag: boolean;
-    globalColorTableSize: number;
-}> {
+export class ScreenLogicalDescriptorPackedFieldsBufferMirror extends BufferMirror<LogicalDescriptorPackedFields> {
     protected bytesToValue(bytes: Buffer): LogicalDescriptorPackedFields {
         const byte = bytes.readUint8();
         return {

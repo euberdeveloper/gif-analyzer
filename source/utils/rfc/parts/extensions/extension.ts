@@ -1,6 +1,18 @@
 import { EXTENSION_INTRODUCER } from '@/types';
 import { ByteBufferMirror, StringBufferMirror } from '../bufferMirror';
 
+export interface GifExtensionRaw {
+    introducer: Buffer;
+    label: Buffer;
+    blockTerminator: Buffer;
+}
+
+export interface GifExtensionValue {
+    introducer: number;
+    label: number;
+    blockTerminator: string;
+}
+
 export abstract class GifExtension {
     public introducer: ByteBufferMirror;
     public label: ByteBufferMirror;
@@ -19,11 +31,14 @@ export abstract class GifExtension {
         this.blockTerminator = new StringBufferMirror(gifBytes.slice(offset + 1, offset + 2));
     }
 
+    protected get introSize(): number {
+        return this.introducer.size + this.label.size;
+    }
+
     get isValid(): boolean {
         return this.introducer.value === EXTENSION_INTRODUCER;
     }
 
-    protected get introSize(): number {
-        return this.introducer.size + this.label.size;
-    }
+    abstract get raw(): GifExtensionRaw;
+    abstract get value(): GifExtensionValue;
 }

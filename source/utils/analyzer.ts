@@ -1,4 +1,6 @@
+import { EXTENSION_INTRODUCER, IMAGE_SEPARATOR, TRAILER } from '@/types';
 import {
+    GifData,
     GifHeader,
     GifRfc,
     GifLogicalScreenDescriptor,
@@ -30,7 +32,8 @@ export class GifAnalyzer {
         this.bytes = bytes;
         this._rfc = {
             header: this.parseHeader(),
-            logicalScreen: this.parseLogicalScreen()
+            logicalScreen: this.parseLogicalScreen(),
+            data: this.parseData()
         };
     }
 
@@ -70,5 +73,28 @@ export class GifAnalyzer {
         } else {
             return null;
         }
+    }
+
+    private parseData(): GifData[] {
+        const data: GifData[] = [];
+
+        for (
+            let nextByte = this.bytes.readUInt8(this.cursor);
+            nextByte !== TRAILER;
+            nextByte = this.bytes.readUInt8(this.cursor)
+        ) {
+            switch (nextByte) {
+                case EXTENSION_INTRODUCER:
+                    data.push(this.parseExtension());
+                    break;
+                case IMAGE_SEPARATOR:
+                    data.push(this.parseGraphicBlock(false));
+                    break;
+                default:
+                    throw new Error(`Invalid data first byte ${nextByte}`);
+            }
+        }
+
+        return data;
     }
 }

@@ -1,11 +1,9 @@
 import { ExtensionLabel } from '@/types';
 import { ByteBufferMirror, StringSubBlocksBufferMirror, Uint16LEBufferMirror } from '@/utils/bufferMirror';
 import { getDataSubBlocksSize } from '@/utils/parsing';
-import { GifExtension } from './extension';
+import { GifExtension, GifExtensionRaw, GifExtensionValue } from './extension';
 
-export interface GifPlainTextExtensionRaw {
-    introducer: Buffer;
-    label: Buffer;
+export interface GifPlainTextExtensionRaw extends GifExtensionRaw {
     textGridLeftPosition: Buffer;
     textGridTopPosition: Buffer;
     textGridWidth: Buffer;
@@ -15,12 +13,9 @@ export interface GifPlainTextExtensionRaw {
     textForegroundColor: Buffer;
     textBackgroundColor: Buffer;
     text: Buffer;
-    blockTerminator: Buffer;
 }
 
-export interface GifPlainTextExtensionValue {
-    introducer: number;
-    label: number;
+export interface GifPlainTextExtensionValue extends GifExtensionValue {
     textGridLeftPosition: number;
     textGridTopPosition: number;
     textGridWidth: number;
@@ -30,7 +25,6 @@ export interface GifPlainTextExtensionValue {
     textForegroundColor: number;
     textBackgroundColor: number;
     text: string;
-    blockTerminator: string;
 }
 
 export class GifPlainTextExtension extends GifExtension {

@@ -3,7 +3,7 @@ import {
     Uint16LEBufferMirror,
     LogicalDescriptorPackedFields,
     ScreenLogicalDescriptorPackedFieldsBufferMirror
-} from '../bufferMirror';
+} from '../../bufferMirror';
 
 export interface GifLogicalScreenDescriptorRaw {
     width: Buffer;
