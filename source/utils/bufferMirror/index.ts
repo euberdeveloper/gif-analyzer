@@ -10,3 +10,4 @@ export * from './stringBufferMirror';
 export * from './booleanBufferMirror';
 
 export * from './screenLogicalDescriptorPackedFieldsBufferMirror';
+export * from './stringSubBlocksBufferMirror';
