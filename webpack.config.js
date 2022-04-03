@@ -1,6 +1,6 @@
 const path = require('path');
 const nodeExternals = require('webpack-node-externals');
-const DtsBundleWebpack = require('dts-bundle-webpack');
+const { default: BundleDeclarationsWebpackPlugin } = require('bundle-declarations-webpack-plugin');
 
 module.exports = {
     target: 'node',
@@ -29,10 +29,9 @@ module.exports = {
         ]
     },
     plugins: [
-        new DtsBundleWebpack({
-            name: 'gif-analyzer',
-            main: 'dist/index.d.ts',
-            out: '../bundled/index.d.ts'
+        new BundleDeclarationsWebpackPlugin({
+            entry: "./source/index.ts",
+            outFile: "./index.d.ts"
         })
     ],
     externals: [nodeExternals()],

@@ -1,6 +1,6 @@
 {
   "name": "gif-analyzer",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "An npm module to decompose a GIF file into its RFC parts",
   "main": "bundled/index.js",
   "types": "bundled/index.d.ts",
@@ -41,7 +41,7 @@
     "@types/module-alias": "^2.0.1",
     "@typescript-eslint/eslint-plugin": "^5.15.0",
     "@typescript-eslint/parser": "^5.15.0",
-    "dts-bundle-webpack": "^1.0.2",
+    "bundle-declarations-webpack-plugin": "^2.2.2",
     "eslint": "^8.11.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-formatter-codeframe": "^7.32.1",
