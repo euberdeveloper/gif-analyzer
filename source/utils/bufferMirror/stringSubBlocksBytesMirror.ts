@@ -1,17 +1,19 @@
-import { parseDataSubBlocks } from '../parsing';
-import { BufferMirror } from '.';
+import { BytesMirror } from '@blackmirror/bytes-mirror';
+import { BytesView } from '@blackmirror/bytes-view';
 
-export class StringSubBlocksBufferMirror extends BufferMirror<string> {
-    protected bytesToValue(bytes: Buffer): string {
-        return parseDataSubBlocks(bytes, 0, (subBlock: Buffer) => subBlock.toString()).join('');
+import { parseDataSubBlocks } from '@/utils/parsing';
+
+export abstract class StringSubBlocksBytesMirror<B> extends BytesMirror<B, string> {
+    protected bytesToValue(bytes: BytesView<B>): string {
+        return parseDataSubBlocks(bytes, 0, (subBlock: BytesView<B>) => subBlock.toString()).join('');
     }
-    protected valueToBytes(value: string): Buffer {
+    protected valueToBytes(value: string): BytesView<B> {
         const nOfFullBlocks = Math.floor(value.length / 255);
         const sizeOfLastBlock = value.length % 255;
         const nOfBlocks = nOfFullBlocks + (sizeOfLastBlock > 0 ? 1 : 0);
-        const sizeOfBuffer = nOfFullBlocks * 255 + sizeOfLastBlock + nOfBlocks + 1;
+        const sizeOfBytes = nOfFullBlocks * 255 + sizeOfLastBlock + nOfBlocks + 1;
 
-        const result = Buffer.alloc(sizeOfBuffer);
+        const result = this.bytesView.alloc(sizeOfBytes);
 
         for (let i = 0; i < nOfFullBlocks; i++) {
             const stringOffset = i * 255;
@@ -25,7 +27,7 @@ export class StringSubBlocksBufferMirror extends BufferMirror<string> {
             result.writeUint8(sizeOfLastBlock, blockOffset);
             result.write(value.slice(stringOffset, stringOffset + sizeOfLastBlock), blockOffset + 1);
         }
-        result.writeUint8(0, sizeOfBuffer - 1);
+        result.writeUint8(0, sizeOfBytes - 1);
 
         return result;
     }
