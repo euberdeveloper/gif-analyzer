@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+        "moduleResolution": "node",
+        "module": "commonjs",
+        "target": "ES2015",
+        "lib": [
+            "ES2021",
+            "DOM"
+        ],
+        "resolveJsonModule": true,
+        "strictNullChecks": true,
+        "sourceMap": true,
+        "declaration": true,
+        "skipLibCheck": true,
+        "baseUrl": ".",
+        "paths": {
+            "@/*": [
+                "./*"
+            ],
+        },
+        "outDir": "../dist"
+    }
+}
