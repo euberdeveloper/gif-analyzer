@@ -1,4 +1,7 @@
+import { BytesView } from '@blackmirror/bytes-mirror';
+
 import { ExtensionLabel, EXTENSION_INTRODUCER, TRAILER } from '@/types';
+
 import {
     GifData,
     GifHeader,
@@ -21,16 +24,16 @@ import {
     GifCommentExtension
 } from './rfc';
 
-export class GifAnalyzer {
-    private readonly bytes: Buffer;
-    private readonly _rfc: GifRfc;
+export abstract class GifAnalyzer<B> {
+    private readonly bytes: BytesView<B>;
+    private readonly _rfc: GifRfc<B>;
     private cursor = 0;
 
-    get rfc(): GifRfc {
+    get rfc(): GifRfc<B> {
         return this._rfc;
     }
 
-    get raw(): GifRfcRaw {
+    get raw(): GifRfcRaw<B> {
         return rfcToRaw(this._rfc);
     }
 
@@ -38,8 +41,8 @@ export class GifAnalyzer {
         return rfcToValue(this._rfc);
     }
 
-    constructor(bytes: Buffer) {
-        this.bytes = bytes;
+    constructor(bytes: B) {
+        this.bytes = this.bytesToBytesView(bytes);
         this._rfc = {
             header: this.parseHeader(),
             logicalScreen: this.parseLogicalScreen(),
@@ -47,13 +50,16 @@ export class GifAnalyzer {
         };
     }
 
-    private parseHeader(): GifHeader {
-        const result = new GifHeader(this.bytes, this.cursor);
+    private parseHeader(): GifHeader<B> {
+        const result = this.instantiateHeader(this.bytes, this.cursor);
         this.cursor += result.size;
         return result;
     }
 
-    private parseLogicalScreen(): { descriptor: GifLogicalScreenDescriptor; globalColorTable: GifColor[] | null } {
+    private parseLogicalScreen(): {
+        descriptor: GifLogicalScreenDescriptor<B>;
+        globalColorTable: GifColor<B>[] | null;
+    } {
         const descriptor = this.parseLogicalScreenDescriptor();
         const globalColorTable = this.parseColorTable(
             descriptor.packedFields.value.globalColorTableFlag,
@@ -62,19 +68,19 @@ export class GifAnalyzer {
         return { descriptor, globalColorTable };
     }
 
-    private parseLogicalScreenDescriptor(): GifLogicalScreenDescriptor {
-        const result = new GifLogicalScreenDescriptor(this.bytes, this.cursor);
+    private parseLogicalScreenDescriptor(): GifLogicalScreenDescriptor<B> {
+        const result = this.instantiateLogicalScreenDescriptor(this.bytes, this.cursor);
         this.cursor += result.size;
         return result;
     }
 
-    private parseColorTable(exists: boolean, size: number): GifColor[] | null {
+    private parseColorTable(exists: boolean, size: number): GifColor<B>[] | null {
         if (exists) {
             const handledSize = 2 ** (size + 1);
-            const colorTable: GifColor[] = [];
+            const colorTable: GifColor<B>[] = [];
 
             for (let i = 0; i < handledSize; i++) {
-                const color = new GifColor(this.bytes, this.cursor);
+                const color = this.instantiateColor(this.bytes, this.cursor);
                 colorTable.push(color);
                 this.cursor += color.size;
             }
@@ -85,13 +91,13 @@ export class GifAnalyzer {
         }
     }
 
-    private parseData(): GifData[] {
-        const data: GifData[] = [];
+    private parseData(): GifData<B>[] {
+        const data: GifData<B>[] = [];
 
         for (
-            let nextByte = this.bytes.readUInt8(this.cursor);
+            let nextByte = this.bytes.readUint8(this.cursor);
             nextByte !== TRAILER;
-            nextByte = this.bytes.readUInt8(this.cursor)
+            nextByte = this.bytes.readUint8(this.cursor)
         ) {
             switch (nextByte) {
                 case EXTENSION_INTRODUCER:
@@ -109,8 +115,8 @@ export class GifAnalyzer {
         return data;
     }
 
-    private parseExtension(): GifData {
-        const extensionLabel = this.bytes.readUInt8(this.cursor + 1);
+    private parseExtension(): GifData<B> {
+        const extensionLabel = this.bytes.readUint8(this.cursor + 1);
         switch (extensionLabel) {
             case ExtensionLabel.GRAPHIC_CONTROL_EXTENSION:
                 return this.parseGraphicBlock(true);
@@ -126,26 +132,26 @@ export class GifAnalyzer {
         }
     }
 
-    private parseGraphicBlock(withExtensions: boolean): GifGraphicBlock {
+    private parseGraphicBlock(withExtensions: boolean): GifGraphicBlock<B> {
         const graphicControlExtension = withExtensions ? this.parseGraphicControlExtension() : null;
-        const otherExtensions: GifExtension[] = [];
-        let graphicRenderingBlock: GifGraphicRenderingBlock;
+        const otherExtensions: GifExtension<B>[] = [];
+        let graphicRenderingBlock: GifGraphicRenderingBlock<B>;
 
         if (withExtensions) {
             let nextByte: number;
             for (
-                nextByte = this.bytes.readUInt8(this.cursor);
+                nextByte = this.bytes.readUint8(this.cursor);
                 nextByte === EXTENSION_INTRODUCER;
-                nextByte = this.bytes.readUInt8(this.cursor)
+                nextByte = this.bytes.readUint8(this.cursor)
             ) {
-                const extensionLabel = this.bytes.readUInt8(this.cursor + 1);
+                const extensionLabel = this.bytes.readUint8(this.cursor + 1);
 
                 if (extensionLabel === ExtensionLabel.PLAINTEXT_EXTENSION) {
                     break;
                 }
 
-                const extension = this.parseExtension() as GifExtension;
-                otherExtensions.push(extension);
+                const extension = this.parseExtension();
+                otherExtensions.push(extension as any);
             }
 
             switch (nextByte) {
@@ -169,13 +175,13 @@ export class GifAnalyzer {
         };
     }
 
-    private parseGraphicControlExtension(): GifGraphicControlExtension {
-        const result = new GifGraphicControlExtension(this.bytes, this.cursor);
+    private parseGraphicControlExtension(): GifGraphicControlExtension<B> {
+        const result = this.instantiateGraphicControlExtension(this.bytes, this.cursor);
         this.cursor += result.size;
         return result;
     }
 
-    private parseTableBasedImage(): GifTableBasedImage {
+    private parseTableBasedImage(): GifTableBasedImage<B> {
         const descriptor = this.parseImageDescriptor();
 
         return {
@@ -188,33 +194,50 @@ export class GifAnalyzer {
         };
     }
 
-    private parseImageDescriptor(): GifImageDescriptor {
-        const result = new GifImageDescriptor(this.bytes, this.cursor);
+    private parseImageDescriptor(): GifImageDescriptor<B> {
+        const result = this.instantiateImageDescriptor(this.bytes, this.cursor);
         this.cursor += result.size;
         return result;
     }
 
-    private parseTableBasedImageData(): GifTableBasedImageData {
-        const result = new GifTableBasedImageData(this.bytes, this.cursor);
+    private parseTableBasedImageData(): GifTableBasedImageData<B> {
+        const result = this.instantiateTableBasedImageData(this.bytes, this.cursor);
         this.cursor += result.size;
         return result;
     }
 
-    private parsePlainTextExtension(): GifPlainTextExtension {
-        const result = new GifPlainTextExtension(this.bytes, this.cursor);
+    private parsePlainTextExtension(): GifPlainTextExtension<B> {
+        const result = this.instantiatePlainTextExtension(this.bytes, this.cursor);
         this.cursor += result.size;
         return result;
     }
 
-    private parseApplicationExtension(): GifApplicationExtension {
-        const result = new GifApplicationExtension(this.bytes, this.cursor);
+    private parseApplicationExtension(): GifApplicationExtension<B> {
+        const result = this.instantiateApplicationExtension(this.bytes, this.cursor);
         this.cursor += result.size;
         return result;
     }
 
-    private parseCommentExtension(): GifCommentExtension {
-        const result = new GifCommentExtension(this.bytes, this.cursor);
+    private parseCommentExtension(): GifCommentExtension<B> {
+        const result = this.instantiateCommentExtension(this.bytes, this.cursor);
         this.cursor += result.size;
         return result;
     }
+
+    protected abstract bytesToBytesView(bytes: B): BytesView<B>;
+    protected abstract instantiateHeader(bytes: BytesView<B>, cursor: number): GifHeader<B>;
+    protected abstract instantiateLogicalScreenDescriptor(
+        bytes: BytesView<B>,
+        cursor: number
+    ): GifLogicalScreenDescriptor<B>;
+    protected abstract instantiateColor(bytes: BytesView<B>, cursor: number): GifColor<B>;
+    protected abstract instantiateGraphicControlExtension(
+        bytes: BytesView<B>,
+        cursor: number
+    ): GifGraphicControlExtension<B>;
+    protected abstract instantiateImageDescriptor(bytes: BytesView<B>, cursor: number): GifImageDescriptor<B>;
+    protected abstract instantiateTableBasedImageData(bytes: BytesView<B>, cursor: number): GifTableBasedImageData<B>;
+    protected abstract instantiatePlainTextExtension(bytes: BytesView<B>, cursor: number): GifPlainTextExtension<B>;
+    protected abstract instantiateApplicationExtension(bytes: BytesView<B>, cursor: number): GifApplicationExtension<B>;
+    protected abstract instantiateCommentExtension(bytes: BytesView<B>, cursor: number): GifCommentExtension<B>;
 }

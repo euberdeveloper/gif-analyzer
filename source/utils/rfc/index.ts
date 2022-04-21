@@ -20,8 +20,8 @@ function _rfcToRaw(data: any): any {
         throw new TypeError('RfcToRaw: Unsupported type');
     }
 }
-export function rfcToRaw(data: GifRfc): GifRfcRaw {
-    return _rfcToRaw(data) as GifRfcRaw;
+export function rfcToRaw<B>(data: GifRfc<B>): GifRfcRaw<B> {
+    return _rfcToRaw(data) as GifRfcRaw<B>;
 }
 
 function _rfcToValue(data: any): any {
@@ -40,6 +40,6 @@ function _rfcToValue(data: any): any {
         throw new TypeError('RfcToValue: Unsupported type');
     }
 }
-export function rfcToValue(data: GifRfc): GifRfcValue {
+export function rfcToValue<B>(data: GifRfc<B>): GifRfcValue {
     return _rfcToValue(data) as GifRfcValue;
 }
