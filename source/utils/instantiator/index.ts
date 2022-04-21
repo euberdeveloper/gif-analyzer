@@ -1,22 +1,34 @@
 import { BytesView, Uint8BytesMirror, StringBytesMirror, Uint16LEBytesMirror } from '@blackmirror/bytes-mirror';
-import { StringSubBlocksBytesMirror, GraphicControlBlockPackedFieldsBytesMirror } from '@/utils/mirrors';
+import {
+    StringSubBlocksBytesMirror,
+    GraphicControlBlockPackedFieldsBytesMirror,
+    ImageDescriptorPackedFieldsBytesMirror,
+    ScreenLogicalDescriptorPackedFieldsBytesMirror
+} from '@/utils/mirrors';
 
-export abstract class Instantiator {
-    public abstract uint8BytesMirror<B>(bytes: BytesView<B>): Uint8BytesMirror<B>;
-    public abstract uint16LEBytesMirror<B>(bytes: BytesView<B>): Uint16LEBytesMirror<B>;
-    public abstract stringBytesMirror<B>(bytes: BytesView<B>): StringBytesMirror<B>;
+export abstract class Instantiator<B> {
+    public abstract uint8BytesMirror(bytes: BytesView<B>): Uint8BytesMirror<B>;
+    public abstract uint16LEBytesMirror(bytes: BytesView<B>): Uint16LEBytesMirror<B>;
+    public abstract stringBytesMirror(bytes: BytesView<B>): StringBytesMirror<B>;
 
-    public abstract stringSubBlocksBytesMirror<B>(bytes: BytesView<B>): StringSubBlocksBytesMirror<B>;
-    public abstract graphicControlBlockPackedFieldsBytesMirror<B>(
+    public abstract stringSubBlocksBytesMirror(bytes: BytesView<B>): StringSubBlocksBytesMirror<B>;
+    public abstract graphicControlBlockPackedFieldsBytesMirror(
         bytes: BytesView<B>
     ): GraphicControlBlockPackedFieldsBytesMirror<B>;
+    public abstract imageDescriptorPackedFieldsBytesMirror(
+        bytes: BytesView<B>
+    ): ImageDescriptorPackedFieldsBytesMirror<B>;
+    public abstract screenLogicalDescriptorPackedFieldsBytesMirror(
+        bytes: BytesView<B>
+    ): ScreenLogicalDescriptorPackedFieldsBytesMirror<B>;
 }
 
-const instantiator: { instance: Instantiator } = {
-    instance: null as any
-};
-export default instantiator;
+export abstract class WithInstantiator<B> {
+    protected instantiator: Instantiator<B>;
 
-export function initialize(generator: () => Instantiator): void {
-    instantiator.instance = generator();
+    constructor() {
+        this.instantiator = this.initializeInstantiator();
+    }
+
+    protected abstract initializeInstantiator(): Instantiator<B>;
 }

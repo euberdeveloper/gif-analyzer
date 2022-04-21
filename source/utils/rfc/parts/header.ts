@@ -1,8 +1,10 @@
-import { StringBufferMirror } from '@/utils/bufferMirror';
+import { BytesView, StringBytesMirror } from '@blackmirror/bytes-mirror';
 
-export interface GifHeaderRaw {
-    signature: Buffer;
-    version: Buffer;
+import { WithInstantiator } from '@/utils/instantiator';
+
+export interface GifHeaderRaw<B> {
+    signature: B;
+    version: B;
 }
 
 export interface GifHeaderValue {
@@ -10,17 +12,18 @@ export interface GifHeaderValue {
     version: string;
 }
 
-export class GifHeader {
-    public signature: StringBufferMirror;
-    public version: StringBufferMirror;
+export abstract class GifHeader<B> extends WithInstantiator<B> {
+    public signature: StringBytesMirror<B>;
+    public version: StringBytesMirror<B>;
 
-    constructor(gifBytes: Buffer, offset: number) {
+    constructor(gifBytes: BytesView<B>, offset: number) {
+        super();
         this.parseBytes(gifBytes, offset);
     }
 
-    private parseBytes(gifBytes: Buffer, offset: number): void {
-        this.signature = new StringBufferMirror(gifBytes.slice(offset, offset + 3));
-        this.version = new StringBufferMirror(gifBytes.slice(offset + 3, offset + 6));
+    private parseBytes(gifBytes: BytesView<B>, offset: number): void {
+        this.signature = this.instantiator.stringBytesMirror(gifBytes.slice(offset, offset + 3));
+        this.version = this.instantiator.stringBytesMirror(gifBytes.slice(offset + 3, offset + 6));
     }
 
     get isValid(): boolean {
@@ -31,7 +34,7 @@ export class GifHeader {
         return this.signature.size + this.version.size;
     }
 
-    get raw(): GifHeaderRaw {
+    get raw(): GifHeaderRaw<B> {
         return {
             signature: this.signature.bytes,
             version: this.version.bytes

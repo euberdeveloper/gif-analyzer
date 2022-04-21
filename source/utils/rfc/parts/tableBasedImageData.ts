@@ -1,9 +1,11 @@
-import { ByteBufferMirror, StringSubBlocksBufferMirror } from '@/utils/bufferMirror';
+import { WithInstantiator } from '@/utils/instantiator';
+import { StringSubBlocksBytesMirror } from '@/utils/mirrors';
 import { getDataSubBlocksSize } from '@/utils/parsing';
+import { BytesView, Uint8BytesMirror } from '@blackmirror/bytes-mirror';
 
-export interface GifTableBasedImageDataRaw {
-    lzwMinimumCodeSize: Buffer;
-    data: Buffer;
+export interface GifTableBasedImageDataRaw<B> {
+    lzwMinimumCodeSize: B;
+    data: B;
 }
 
 export interface GifTableBasedImageDataValue {
@@ -11,20 +13,21 @@ export interface GifTableBasedImageDataValue {
     data: string;
 }
 
-export class GifTableBasedImageData {
-    public lzwMinimumCodeSize: ByteBufferMirror;
-    public data: StringSubBlocksBufferMirror;
+export abstract class GifTableBasedImageData<B> extends WithInstantiator<B> {
+    public lzwMinimumCodeSize: Uint8BytesMirror<B>;
+    public data: StringSubBlocksBytesMirror<B>;
 
-    constructor(gifBytes: Buffer, offset: number) {
+    constructor(gifBytes: BytesView<B>, offset: number) {
+        super();
         this.parseBytes(gifBytes, offset);
     }
 
-    protected parseBytes(gifBytes: Buffer, offset: number): void {
-        this.lzwMinimumCodeSize = new ByteBufferMirror(gifBytes.slice(offset, offset + 1));
+    protected parseBytes(gifBytes: BytesView<B>, offset: number): void {
+        this.lzwMinimumCodeSize = this.instantiator.uint8BytesMirror(gifBytes.slice(offset, offset + 1));
 
         const dataOffset = offset + 1;
         const dataSize = getDataSubBlocksSize(gifBytes, dataOffset);
-        this.data = new StringSubBlocksBufferMirror(gifBytes.slice(dataOffset, dataOffset + dataSize));
+        this.data = this.instantiator.stringSubBlocksBytesMirror(gifBytes.slice(dataOffset, dataOffset + dataSize));
     }
 
     get isValid(): boolean {
@@ -35,7 +38,7 @@ export class GifTableBasedImageData {
         return this.lzwMinimumCodeSize.size + this.data.size;
     }
 
-    get raw(): GifTableBasedImageDataRaw {
+    get raw(): GifTableBasedImageDataRaw<B> {
         return {
             lzwMinimumCodeSize: this.lzwMinimumCodeSize.bytes,
             data: this.data.bytes

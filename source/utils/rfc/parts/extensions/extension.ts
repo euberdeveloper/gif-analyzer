@@ -2,7 +2,7 @@ import { BytesView, Uint8BytesMirror } from '@blackmirror/bytes-mirror';
 
 import { EXTENSION_INTRODUCER } from '@/types';
 
-import instantiator from '@/utils/instantiator';
+import { WithInstantiator } from '@/utils/instantiator';
 
 export interface GifExtensionRaw<B> {
     introducer: B;
@@ -14,17 +14,18 @@ export interface GifExtensionValue {
     label: number;
 }
 
-export abstract class GifExtension<B> {
+export abstract class GifExtension<B> extends WithInstantiator<B> {
     public introducer: Uint8BytesMirror<B>;
     public label: Uint8BytesMirror<B>;
 
     constructor(gifBytes: BytesView<B>, offset: number) {
+        super();
         this.parseIntro(gifBytes, offset);
     }
 
     protected parseIntro(gifBytes: BytesView<B>, offset: number): void {
-        this.introducer = instantiator.instance.uint8BytesMirror(gifBytes.slice(offset, offset + 1));
-        this.introducer = instantiator.instance.uint8BytesMirror(gifBytes.slice(offset + 1, offset + 2));
+        this.introducer = this.instantiator.uint8BytesMirror(gifBytes.slice(offset, offset + 1));
+        this.introducer = this.instantiator.uint8BytesMirror(gifBytes.slice(offset + 1, offset + 2));
     }
 
     protected get introSize(): number {

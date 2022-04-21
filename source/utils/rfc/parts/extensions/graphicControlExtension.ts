@@ -1,7 +1,6 @@
 import { BytesView, Uint16LEBytesMirror, Uint8BytesMirror } from '@blackmirror/bytes-mirror';
 
 import { GraphicControlBlockPackedFields, GraphicControlBlockPackedFieldsBytesMirror } from '@/utils/mirrors';
-import instantiator from '@/utils/instantiator';
 
 import { GifExtension, GifExtensionRaw, GifExtensionValue } from './extension';
 
@@ -21,7 +20,7 @@ export interface GifGraphicControlExtensionValue extends GifExtensionValue {
     blockTerminator: number;
 }
 
-export class GifGraphicControlExtension<B> extends GifExtension<B> {
+export abstract class GifGraphicControlExtension<B> extends GifExtension<B> {
     public blockSize: Uint8BytesMirror<B>;
     public packedFields: GraphicControlBlockPackedFieldsBytesMirror<B>;
     public delayTime: Uint16LEBytesMirror<B>;
@@ -34,13 +33,13 @@ export class GifGraphicControlExtension<B> extends GifExtension<B> {
     }
 
     private parseBytes(gifBytes: BytesView<B>, offset: number): void {
-        this.blockSize = instantiator.instance.uint8BytesMirror(gifBytes.slice(offset, offset + 1));
-        this.packedFields = instantiator.instance.graphicControlBlockPackedFieldsBytesMirror(
+        this.blockSize = this.instantiator.uint8BytesMirror(gifBytes.slice(offset, offset + 1));
+        this.packedFields = this.instantiator.graphicControlBlockPackedFieldsBytesMirror(
             gifBytes.slice(offset + 1, offset + 2)
         );
-        this.delayTime = instantiator.instance.uint16LEBytesMirror(gifBytes.slice(offset + 2, offset + 4));
-        this.transparentColorIndex = instantiator.instance.uint8BytesMirror(gifBytes.slice(offset + 4, offset + 5));
-        this.blockTerminator = instantiator.instance.uint8BytesMirror(gifBytes.slice(offset + 5, offset + 6));
+        this.delayTime = this.instantiator.uint16LEBytesMirror(gifBytes.slice(offset + 2, offset + 4));
+        this.transparentColorIndex = this.instantiator.uint8BytesMirror(gifBytes.slice(offset + 4, offset + 5));
+        this.blockTerminator = this.instantiator.uint8BytesMirror(gifBytes.slice(offset + 5, offset + 6));
     }
 
     get isValid(): boolean {

@@ -3,7 +3,6 @@ import { BytesView, Uint16LEBytesMirror, Uint8BytesMirror } from '@blackmirror/b
 import { ExtensionLabel } from '@/types';
 import { StringSubBlocksBytesMirror } from '@/utils/mirrors';
 import { getDataSubBlocksSize } from '@/utils/parsing';
-import instantiator from '@/utils/instantiator';
 
 import { GifExtension, GifExtensionRaw, GifExtensionValue } from './extension';
 
@@ -31,7 +30,7 @@ export interface GifPlainTextExtensionValue extends GifExtensionValue {
     text: string;
 }
 
-export class GifPlainTextExtension<B> extends GifExtension<B> {
+export abstract class GifPlainTextExtension<B> extends GifExtension<B> {
     public blockSize: Uint8BytesMirror<B>;
     public textGridLeftPosition: Uint16LEBytesMirror<B>;
     public textGridTopPosition: Uint16LEBytesMirror<B>;
@@ -50,19 +49,19 @@ export class GifPlainTextExtension<B> extends GifExtension<B> {
     }
 
     protected parseBytes(gifBytes: BytesView<B>, offset: number): void {
-        this.blockSize = instantiator.instance.uint8BytesMirror(gifBytes.slice(offset, offset + 1));
-        this.textGridLeftPosition = instantiator.instance.uint16LEBytesMirror(gifBytes.slice(offset + 1, offset + 3));
-        this.textGridTopPosition = instantiator.instance.uint16LEBytesMirror(gifBytes.slice(offset + 3, offset + 5));
-        this.textGridWidth = instantiator.instance.uint16LEBytesMirror(gifBytes.slice(offset + 5, offset + 7));
-        this.textGridHeight = instantiator.instance.uint16LEBytesMirror(gifBytes.slice(offset + 7, offset + 9));
-        this.characterCellWidth = instantiator.instance.uint8BytesMirror(gifBytes.slice(offset + 9, offset + 10));
-        this.characterCellHeight = instantiator.instance.uint8BytesMirror(gifBytes.slice(offset + 10, offset + 11));
-        this.textForegroundColor = instantiator.instance.uint8BytesMirror(gifBytes.slice(offset + 11, offset + 12));
-        this.textBackgroundColor = instantiator.instance.uint8BytesMirror(gifBytes.slice(offset + 12, offset + 13));
+        this.blockSize = this.instantiator.uint8BytesMirror(gifBytes.slice(offset, offset + 1));
+        this.textGridLeftPosition = this.instantiator.uint16LEBytesMirror(gifBytes.slice(offset + 1, offset + 3));
+        this.textGridTopPosition = this.instantiator.uint16LEBytesMirror(gifBytes.slice(offset + 3, offset + 5));
+        this.textGridWidth = this.instantiator.uint16LEBytesMirror(gifBytes.slice(offset + 5, offset + 7));
+        this.textGridHeight = this.instantiator.uint16LEBytesMirror(gifBytes.slice(offset + 7, offset + 9));
+        this.characterCellWidth = this.instantiator.uint8BytesMirror(gifBytes.slice(offset + 9, offset + 10));
+        this.characterCellHeight = this.instantiator.uint8BytesMirror(gifBytes.slice(offset + 10, offset + 11));
+        this.textForegroundColor = this.instantiator.uint8BytesMirror(gifBytes.slice(offset + 11, offset + 12));
+        this.textBackgroundColor = this.instantiator.uint8BytesMirror(gifBytes.slice(offset + 12, offset + 13));
 
         const textOffset = offset + 13;
         const textSize = getDataSubBlocksSize(gifBytes, textOffset);
-        this.text = instantiator.instance.stringSubBlocksBytesMirror(gifBytes.slice(textOffset, textOffset + textSize));
+        this.text = this.instantiator.stringSubBlocksBytesMirror(gifBytes.slice(textOffset, textOffset + textSize));
     }
 
     get isValid(): boolean {

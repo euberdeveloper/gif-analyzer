@@ -1,8 +1,11 @@
+import { BytesView, Uint8BytesMirror } from '@blackmirror/bytes-mirror';
 
-export interface GifColorRaw {
-    red: Buffer;
-    green: Buffer;
-    blue: Buffer;
+import { WithInstantiator } from '@/utils/instantiator';
+
+export interface GifColorRaw<B> {
+    red: B;
+    green: B;
+    blue: B;
 }
 
 export interface GifColorValue {
@@ -11,19 +14,20 @@ export interface GifColorValue {
     blue: number;
 }
 
-export abstract class GifColor<B> {
-    public red: ByteBufferMirror;
-    public green: ByteBufferMirror;
-    public blue: ByteBufferMirror;
+export abstract class GifColor<B> extends WithInstantiator<B> {
+    public red: Uint8BytesMirror<B>;
+    public green: Uint8BytesMirror<B>;
+    public blue: Uint8BytesMirror<B>;
 
-    constructor(gifBytes: Buffer, offset: number) {
+    constructor(gifBytes: BytesView<B>, offset: number) {
+        super();
         this.parseBytes(gifBytes, offset);
     }
 
-    private parseBytes(gifBytes: Buffer, offset: number): void {
-        this.red = new ByteBufferMirror(gifBytes.slice(offset, offset + 1));
-        this.green = new ByteBufferMirror(gifBytes.slice(offset + 1, offset + 2));
-        this.blue = new ByteBufferMirror(gifBytes.slice(offset + 2, offset + 3));
+    private parseBytes(gifBytes: BytesView<B>, offset: number): void {
+        this.red = this.instantiator.uint8BytesMirror(gifBytes.slice(offset, offset + 1));
+        this.green = this.instantiator.uint8BytesMirror(gifBytes.slice(offset + 1, offset + 2));
+        this.blue = this.instantiator.uint8BytesMirror(gifBytes.slice(offset + 2, offset + 3));
     }
 
     get isValid(): boolean {
@@ -34,7 +38,7 @@ export abstract class GifColor<B> {
         return this.red.size + this.green.size + this.blue.size;
     }
 
-    get raw(): GifColorRaw {
+    get raw(): GifColorRaw<B> {
         return {
             red: this.red.bytes,
             green: this.green.bytes,

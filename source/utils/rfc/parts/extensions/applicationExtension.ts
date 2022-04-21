@@ -4,7 +4,6 @@ import { ExtensionLabel } from '@/types';
 
 import { StringSubBlocksBytesMirror } from '@/utils/mirrors';
 import { getDataSubBlocksSize } from '@/utils/parsing';
-import instantiator from '@/utils/instantiator';
 
 import { GifExtension, GifExtensionRaw, GifExtensionValue } from './extension';
 
@@ -22,7 +21,7 @@ export interface GifApplicationExtensionValue extends GifExtensionValue {
     applicationData: string;
 }
 
-export class GifApplicationExtension<B> extends GifExtension<B> {
+export abstract class GifApplicationExtension<B> extends GifExtension<B> {
     public blockSize: Uint8BytesMirror<B>;
     public applicationIdentifier: StringBytesMirror<B>;
     public applicationAuthenticationCode: StringBytesMirror<B>;
@@ -35,15 +34,15 @@ export class GifApplicationExtension<B> extends GifExtension<B> {
     }
 
     protected parseBytes(gifBytes: BytesView<B>, offset: number): void {
-        this.blockSize = instantiator.instance.uint8BytesMirror(gifBytes.slice(offset, offset + 1));
-        this.applicationIdentifier = instantiator.instance.stringBytesMirror(gifBytes.slice(offset + 1, offset + 9));
-        this.applicationAuthenticationCode = instantiator.instance.stringBytesMirror(
+        this.blockSize = this.instantiator.uint8BytesMirror(gifBytes.slice(offset, offset + 1));
+        this.applicationIdentifier = this.instantiator.stringBytesMirror(gifBytes.slice(offset + 1, offset + 9));
+        this.applicationAuthenticationCode = this.instantiator.stringBytesMirror(
             gifBytes.slice(offset + 9, offset + 12)
         );
 
         const dataOffset = offset + 12;
         const dataSize = getDataSubBlocksSize(gifBytes, dataOffset);
-        this.applicationData = instantiator.instance.stringSubBlocksBytesMirror(
+        this.applicationData = this.instantiator.stringSubBlocksBytesMirror(
             gifBytes.slice(dataOffset, dataOffset + dataSize)
         );
     }

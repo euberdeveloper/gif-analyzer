@@ -4,7 +4,6 @@ import { ExtensionLabel } from '@/types';
 
 import { StringSubBlocksBytesMirror } from '@/utils/mirrors';
 import { getDataSubBlocksSize } from '@/utils/parsing';
-import instantiator from '@/utils/instantiator';
 
 import { GifExtension, GifExtensionRaw, GifExtensionValue } from './extension';
 
@@ -16,7 +15,7 @@ export interface GifCommentExtensionValue extends GifExtensionValue {
     comment: string;
 }
 
-export class GifCommentExtension<B> extends GifExtension<B> {
+export abstract class GifCommentExtension<B> extends GifExtension<B> {
     public comment: StringSubBlocksBytesMirror<B>;
 
     constructor(gifBytes: BytesView<B>, offset: number) {
@@ -26,7 +25,7 @@ export class GifCommentExtension<B> extends GifExtension<B> {
 
     protected parseBytes(gifBytes: BytesView<B>, offset: number): void {
         const commentSize = getDataSubBlocksSize(gifBytes, offset);
-        this.comment = instantiator.instance.stringSubBlocksBytesMirror(gifBytes.slice(offset, offset + commentSize));
+        this.comment = this.instantiator.stringSubBlocksBytesMirror(gifBytes.slice(offset, offset + commentSize));
     }
 
     get isValid(): boolean {

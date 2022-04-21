@@ -1,16 +1,13 @@
-import {
-    ByteBufferMirror,
-    Uint16LEBufferMirror,
-    LogicalDescriptorPackedFields,
-    ScreenLogicalDescriptorPackedFieldsBufferMirror
-} from '../../bufferMirror';
+import { WithInstantiator } from '@/utils/instantiator';
+import { LogicalDescriptorPackedFields, ScreenLogicalDescriptorPackedFieldsBytesMirror } from '@/utils/mirrors';
+import { BytesView, Uint16LEBytesMirror, Uint8BytesMirror } from '@blackmirror/bytes-mirror';
 
-export interface GifLogicalScreenDescriptorRaw {
-    width: Buffer;
-    height: Buffer;
-    packedFields: Buffer;
-    backgroundColorIndex: Buffer;
-    pixelAspectRatio: Buffer;
+export interface GifLogicalScreenDescriptorRaw<B> {
+    width: B;
+    height: B;
+    packedFields: B;
+    backgroundColorIndex: B;
+    pixelAspectRatio: B;
 }
 
 export interface GifLogicalScreenDescriptorValue {
@@ -21,23 +18,26 @@ export interface GifLogicalScreenDescriptorValue {
     pixelAspectRatio: number;
 }
 
-export class GifLogicalScreenDescriptor {
-    public width: Uint16LEBufferMirror;
-    public height: Uint16LEBufferMirror;
-    public packedFields: ScreenLogicalDescriptorPackedFieldsBufferMirror;
-    public backgroundColorIndex: ByteBufferMirror;
-    public pixelAspectRatio: ByteBufferMirror;
+export abstract class GifLogicalScreenDescriptor<B> extends WithInstantiator<B> {
+    public width: Uint16LEBytesMirror<B>;
+    public height: Uint16LEBytesMirror<B>;
+    public packedFields: ScreenLogicalDescriptorPackedFieldsBytesMirror<B>;
+    public backgroundColorIndex: Uint8BytesMirror<B>;
+    public pixelAspectRatio: Uint8BytesMirror<B>;
 
-    constructor(gifBytes: Buffer, offset: number) {
+    constructor(gifBytes: BytesView<B>, offset: number) {
+        super();
         this.parseBytes(gifBytes, offset);
     }
 
-    private parseBytes(gifBytes: Buffer, offset: number): void {
-        this.width = new Uint16LEBufferMirror(gifBytes.slice(offset, offset + 2));
-        this.height = new Uint16LEBufferMirror(gifBytes.slice(offset + 2, offset + 4));
-        this.packedFields = new ScreenLogicalDescriptorPackedFieldsBufferMirror(gifBytes.slice(offset + 4, offset + 5));
-        this.backgroundColorIndex = new ByteBufferMirror(gifBytes.slice(offset + 5, offset + 6));
-        this.pixelAspectRatio = new ByteBufferMirror(gifBytes.slice(offset + 6, offset + 7));
+    private parseBytes(gifBytes: BytesView<B>, offset: number): void {
+        this.width = this.instantiator.uint16LEBytesMirror(gifBytes.slice(offset, offset + 2));
+        this.height = this.instantiator.uint16LEBytesMirror(gifBytes.slice(offset + 2, offset + 4));
+        this.packedFields = this.instantiator.screenLogicalDescriptorPackedFieldsBytesMirror(
+            gifBytes.slice(offset + 4, offset + 5)
+        );
+        this.backgroundColorIndex = this.instantiator.uint8BytesMirror(gifBytes.slice(offset + 5, offset + 6));
+        this.pixelAspectRatio = this.instantiator.uint8BytesMirror(gifBytes.slice(offset + 6, offset + 7));
     }
 
     get isValid(): boolean {
@@ -54,7 +54,7 @@ export class GifLogicalScreenDescriptor {
         );
     }
 
-    get raw(): GifLogicalScreenDescriptorRaw {
+    get raw(): GifLogicalScreenDescriptorRaw<B> {
         return {
             width: this.width.bytes,
             height: this.height.bytes,
