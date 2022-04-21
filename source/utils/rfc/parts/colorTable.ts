@@ -1,4 +1,3 @@
-import { ByteBufferMirror } from '@/utils/bufferMirror';
 
 export interface GifColorRaw {
     red: Buffer;
@@ -12,7 +11,7 @@ export interface GifColorValue {
     blue: number;
 }
 
-export class GifColor {
+export abstract class GifColor<B> {
     public red: ByteBufferMirror;
     public green: ByteBufferMirror;
     public blue: ByteBufferMirror;

@@ -1,18 +1,22 @@
+import { BytesView, Uint16LEBytesMirror, Uint8BytesMirror } from '@blackmirror/bytes-mirror';
+
 import { ExtensionLabel } from '@/types';
-import { ByteBufferMirror, StringSubBlocksBufferMirror, Uint16LEBufferMirror } from '@/utils/bufferMirror';
+import { StringSubBlocksBytesMirror } from '@/utils/mirrors';
 import { getDataSubBlocksSize } from '@/utils/parsing';
+import instantiator from '@/utils/instantiator';
+
 import { GifExtension, GifExtensionRaw, GifExtensionValue } from './extension';
 
-export interface GifPlainTextExtensionRaw extends GifExtensionRaw {
-    textGridLeftPosition: Buffer;
-    textGridTopPosition: Buffer;
-    textGridWidth: Buffer;
-    textGridHeight: Buffer;
-    characterCellWidth: Buffer;
-    characterCellHeight: Buffer;
-    textForegroundColor: Buffer;
-    textBackgroundColor: Buffer;
-    text: Buffer;
+export interface GifPlainTextExtensionRaw<B> extends GifExtensionRaw<B> {
+    textGridLeftPosition: B;
+    textGridTopPosition: B;
+    textGridWidth: B;
+    textGridHeight: B;
+    characterCellWidth: B;
+    characterCellHeight: B;
+    textForegroundColor: B;
+    textBackgroundColor: B;
+    text: B;
 }
 
 export interface GifPlainTextExtensionValue extends GifExtensionValue {
@@ -27,38 +31,38 @@ export interface GifPlainTextExtensionValue extends GifExtensionValue {
     text: string;
 }
 
-export class GifPlainTextExtension extends GifExtension {
-    public blockSize: ByteBufferMirror;
-    public textGridLeftPosition: Uint16LEBufferMirror;
-    public textGridTopPosition: Uint16LEBufferMirror;
-    public textGridWidth: Uint16LEBufferMirror;
-    public textGridHeight: Uint16LEBufferMirror;
-    public characterCellWidth: ByteBufferMirror;
-    public characterCellHeight: ByteBufferMirror;
-    public textForegroundColor: ByteBufferMirror;
-    public textBackgroundColor: ByteBufferMirror;
+export class GifPlainTextExtension<B> extends GifExtension<B> {
+    public blockSize: Uint8BytesMirror<B>;
+    public textGridLeftPosition: Uint16LEBytesMirror<B>;
+    public textGridTopPosition: Uint16LEBytesMirror<B>;
+    public textGridWidth: Uint16LEBytesMirror<B>;
+    public textGridHeight: Uint16LEBytesMirror<B>;
+    public characterCellWidth: Uint8BytesMirror<B>;
+    public characterCellHeight: Uint8BytesMirror<B>;
+    public textForegroundColor: Uint8BytesMirror<B>;
+    public textBackgroundColor: Uint8BytesMirror<B>;
 
-    public text: StringSubBlocksBufferMirror;
+    public text: StringSubBlocksBytesMirror<B>;
 
-    constructor(gifBytes: Buffer, offset: number) {
+    constructor(gifBytes: BytesView<B>, offset: number) {
         super(gifBytes, offset);
         this.parseBytes(gifBytes, offset + super.introSize);
     }
 
-    protected parseBytes(gifBytes: Buffer, offset: number): void {
-        this.blockSize = new ByteBufferMirror(gifBytes.slice(offset, offset + 1));
-        this.textGridLeftPosition = new Uint16LEBufferMirror(gifBytes.slice(offset + 1, offset + 3));
-        this.textGridTopPosition = new Uint16LEBufferMirror(gifBytes.slice(offset + 3, offset + 5));
-        this.textGridWidth = new Uint16LEBufferMirror(gifBytes.slice(offset + 5, offset + 7));
-        this.textGridHeight = new Uint16LEBufferMirror(gifBytes.slice(offset + 7, offset + 9));
-        this.characterCellWidth = new ByteBufferMirror(gifBytes.slice(offset + 9, offset + 10));
-        this.characterCellHeight = new ByteBufferMirror(gifBytes.slice(offset + 10, offset + 11));
-        this.textForegroundColor = new ByteBufferMirror(gifBytes.slice(offset + 11, offset + 12));
-        this.textBackgroundColor = new ByteBufferMirror(gifBytes.slice(offset + 12, offset + 13));
+    protected parseBytes(gifBytes: BytesView<B>, offset: number): void {
+        this.blockSize = instantiator.instance.uint8BytesMirror(gifBytes.slice(offset, offset + 1));
+        this.textGridLeftPosition = instantiator.instance.uint16LEBytesMirror(gifBytes.slice(offset + 1, offset + 3));
+        this.textGridTopPosition = instantiator.instance.uint16LEBytesMirror(gifBytes.slice(offset + 3, offset + 5));
+        this.textGridWidth = instantiator.instance.uint16LEBytesMirror(gifBytes.slice(offset + 5, offset + 7));
+        this.textGridHeight = instantiator.instance.uint16LEBytesMirror(gifBytes.slice(offset + 7, offset + 9));
+        this.characterCellWidth = instantiator.instance.uint8BytesMirror(gifBytes.slice(offset + 9, offset + 10));
+        this.characterCellHeight = instantiator.instance.uint8BytesMirror(gifBytes.slice(offset + 10, offset + 11));
+        this.textForegroundColor = instantiator.instance.uint8BytesMirror(gifBytes.slice(offset + 11, offset + 12));
+        this.textBackgroundColor = instantiator.instance.uint8BytesMirror(gifBytes.slice(offset + 12, offset + 13));
 
         const textOffset = offset + 13;
         const textSize = getDataSubBlocksSize(gifBytes, textOffset);
-        this.text = new StringSubBlocksBufferMirror(gifBytes.slice(textOffset, textOffset + textSize));
+        this.text = instantiator.instance.stringSubBlocksBytesMirror(gifBytes.slice(textOffset, textOffset + textSize));
     }
 
     get isValid(): boolean {
@@ -81,7 +85,7 @@ export class GifPlainTextExtension extends GifExtension {
         );
     }
 
-    get raw(): GifPlainTextExtensionRaw {
+    get raw(): GifPlainTextExtensionRaw<B> {
         return {
             introducer: this.introducer.bytes,
             label: this.label.bytes,

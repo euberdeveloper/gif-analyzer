@@ -1,13 +1,18 @@
+import { BytesView, StringBytesMirror, Uint8BytesMirror } from '@blackmirror/bytes-mirror';
+
 import { ExtensionLabel } from '@/types';
-import { ByteBufferMirror, StringBufferMirror, StringSubBlocksBufferMirror } from '@/utils/bufferMirror';
+
+import { StringSubBlocksBytesMirror } from '@/utils/mirrors';
 import { getDataSubBlocksSize } from '@/utils/parsing';
+import instantiator from '@/utils/instantiator';
+
 import { GifExtension, GifExtensionRaw, GifExtensionValue } from './extension';
 
-export interface GifApplicationExtensionRaw extends GifExtensionRaw {
-    blockSize: Buffer;
-    applicationIdentifier: Buffer;
-    applicationAuthenticationCode: Buffer;
-    applicationData: Buffer;
+export interface GifApplicationExtensionRaw<B> extends GifExtensionRaw<B> {
+    blockSize: B;
+    applicationIdentifier: B;
+    applicationAuthenticationCode: B;
+    applicationData: B;
 }
 
 export interface GifApplicationExtensionValue extends GifExtensionValue {
@@ -17,26 +22,30 @@ export interface GifApplicationExtensionValue extends GifExtensionValue {
     applicationData: string;
 }
 
-export class GifApplicationExtension extends GifExtension {
-    public blockSize: ByteBufferMirror;
-    public applicationIdentifier: StringBufferMirror;
-    public applicationAuthenticationCode: StringBufferMirror;
+export class GifApplicationExtension<B> extends GifExtension<B> {
+    public blockSize: Uint8BytesMirror<B>;
+    public applicationIdentifier: StringBytesMirror<B>;
+    public applicationAuthenticationCode: StringBytesMirror<B>;
 
-    public applicationData: StringSubBlocksBufferMirror;
+    public applicationData: StringSubBlocksBytesMirror<B>;
 
-    constructor(gifBytes: Buffer, offset: number) {
+    constructor(gifBytes: BytesView<B>, offset: number) {
         super(gifBytes, offset);
         this.parseBytes(gifBytes, offset + super.introSize);
     }
 
-    protected parseBytes(gifBytes: Buffer, offset: number): void {
-        this.blockSize = new ByteBufferMirror(gifBytes.slice(offset, offset + 1));
-        this.applicationIdentifier = new StringBufferMirror(gifBytes.slice(offset + 1, offset + 9));
-        this.applicationAuthenticationCode = new StringBufferMirror(gifBytes.slice(offset + 9, offset + 12));
+    protected parseBytes(gifBytes: BytesView<B>, offset: number): void {
+        this.blockSize = instantiator.instance.uint8BytesMirror(gifBytes.slice(offset, offset + 1));
+        this.applicationIdentifier = instantiator.instance.stringBytesMirror(gifBytes.slice(offset + 1, offset + 9));
+        this.applicationAuthenticationCode = instantiator.instance.stringBytesMirror(
+            gifBytes.slice(offset + 9, offset + 12)
+        );
 
         const dataOffset = offset + 12;
         const dataSize = getDataSubBlocksSize(gifBytes, dataOffset);
-        this.applicationData = new StringSubBlocksBufferMirror(gifBytes.slice(dataOffset, dataOffset + dataSize));
+        this.applicationData = instantiator.instance.stringSubBlocksBytesMirror(
+            gifBytes.slice(dataOffset, dataOffset + dataSize)
+        );
     }
 
     get isValid(): boolean {
@@ -53,7 +62,7 @@ export class GifApplicationExtension extends GifExtension {
         );
     }
 
-    get raw(): GifApplicationExtensionRaw {
+    get raw(): GifApplicationExtensionRaw<B> {
         return {
             introducer: this.introducer.bytes,
             label: this.label.bytes,

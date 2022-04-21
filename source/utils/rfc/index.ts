@@ -1,4 +1,4 @@
-import { BufferMirror } from '@/utils/bufferMirror';
+import { BytesMirror } from '@blackmirror/bytes-mirror';
 import { GifRfc, GifRfcRaw, GifRfcValue } from './types';
 
 export * from './parts';
@@ -7,7 +7,7 @@ export * from './types';
 function _rfcToRaw(data: any): any {
     if (data === null) {
         return null;
-    } else if (data instanceof BufferMirror) {
+    } else if (data instanceof BytesMirror) {
         return data.bytes;
     } else if (Array.isArray(data)) {
         return data.map(d => _rfcToRaw(d));
@@ -27,7 +27,7 @@ export function rfcToRaw(data: GifRfc): GifRfcRaw {
 function _rfcToValue(data: any): any {
     if (data === null) {
         return null;
-    } else if (data instanceof BufferMirror) {
+    } else if (data instanceof BytesMirror) {
         return data.value;
     } else if (Array.isArray(data)) {
         return data.map(d => _rfcToValue(d));

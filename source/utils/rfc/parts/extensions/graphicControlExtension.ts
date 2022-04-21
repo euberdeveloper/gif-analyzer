@@ -1,17 +1,16 @@
-import {
-    ByteBufferMirror,
-    Uint16LEBufferMirror,
-    GraphicControlBlockPackedFields,
-    GraphicControlBlockPackedFieldsBufferMirror
-} from '@/utils/bufferMirror';
+import { BytesView, Uint16LEBytesMirror, Uint8BytesMirror } from '@blackmirror/bytes-mirror';
+
+import { GraphicControlBlockPackedFields, GraphicControlBlockPackedFieldsBytesMirror } from '@/utils/mirrors';
+import instantiator from '@/utils/instantiator';
+
 import { GifExtension, GifExtensionRaw, GifExtensionValue } from './extension';
 
-export interface GifGraphicControlExtensionRaw extends GifExtensionRaw {
-    blockSize: Buffer;
-    packedFields: Buffer;
-    delayTime: Buffer;
-    transparentColorIndex: Buffer;
-    blockTerminator: Buffer;
+export interface GifGraphicControlExtensionRaw<B> extends GifExtensionRaw<B> {
+    blockSize: B;
+    packedFields: B;
+    delayTime: B;
+    transparentColorIndex: B;
+    blockTerminator: B;
 }
 
 export interface GifGraphicControlExtensionValue extends GifExtensionValue {
@@ -22,24 +21,26 @@ export interface GifGraphicControlExtensionValue extends GifExtensionValue {
     blockTerminator: number;
 }
 
-export class GifGraphicControlExtension extends GifExtension {
-    public blockSize: ByteBufferMirror;
-    public packedFields: GraphicControlBlockPackedFieldsBufferMirror;
-    public delayTime: Uint16LEBufferMirror;
-    public transparentColorIndex: ByteBufferMirror;
-    public blockTerminator: ByteBufferMirror;
+export class GifGraphicControlExtension<B> extends GifExtension<B> {
+    public blockSize: Uint8BytesMirror<B>;
+    public packedFields: GraphicControlBlockPackedFieldsBytesMirror<B>;
+    public delayTime: Uint16LEBytesMirror<B>;
+    public transparentColorIndex: Uint8BytesMirror<B>;
+    public blockTerminator: Uint8BytesMirror<B>;
 
-    constructor(gifBytes: Buffer, offset: number) {
+    constructor(gifBytes: BytesView<B>, offset: number) {
         super(gifBytes, offset);
         this.parseBytes(gifBytes, offset + super.introSize);
     }
 
-    private parseBytes(gifBytes: Buffer, offset: number): void {
-        this.blockSize = new ByteBufferMirror(gifBytes.slice(offset, offset + 1));
-        this.packedFields = new GraphicControlBlockPackedFieldsBufferMirror(gifBytes.slice(offset + 1, offset + 2));
-        this.delayTime = new Uint16LEBufferMirror(gifBytes.slice(offset + 2, offset + 4));
-        this.transparentColorIndex = new ByteBufferMirror(gifBytes.slice(offset + 4, offset + 5));
-        this.blockTerminator = new ByteBufferMirror(gifBytes.slice(offset + 5, offset + 6));
+    private parseBytes(gifBytes: BytesView<B>, offset: number): void {
+        this.blockSize = instantiator.instance.uint8BytesMirror(gifBytes.slice(offset, offset + 1));
+        this.packedFields = instantiator.instance.graphicControlBlockPackedFieldsBytesMirror(
+            gifBytes.slice(offset + 1, offset + 2)
+        );
+        this.delayTime = instantiator.instance.uint16LEBytesMirror(gifBytes.slice(offset + 2, offset + 4));
+        this.transparentColorIndex = instantiator.instance.uint8BytesMirror(gifBytes.slice(offset + 4, offset + 5));
+        this.blockTerminator = instantiator.instance.uint8BytesMirror(gifBytes.slice(offset + 5, offset + 6));
     }
 
     get isValid(): boolean {
@@ -57,7 +58,7 @@ export class GifGraphicControlExtension extends GifExtension {
         );
     }
 
-    get raw(): GifGraphicControlExtensionRaw {
+    get raw(): GifGraphicControlExtensionRaw<B> {
         return {
             introducer: this.introducer.bytes,
             label: this.label.bytes,

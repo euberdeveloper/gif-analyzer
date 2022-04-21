@@ -1,9 +1,12 @@
-import { EXTENSION_INTRODUCER } from '@/types';
-import { ByteBufferMirror } from '@/utils/bufferMirror';
+import { BytesView, Uint8BytesMirror } from '@blackmirror/bytes-mirror';
 
-export interface GifExtensionRaw {
-    introducer: Buffer;
-    label: Buffer;
+import { EXTENSION_INTRODUCER } from '@/types';
+
+import instantiator from '@/utils/instantiator';
+
+export interface GifExtensionRaw<B> {
+    introducer: B;
+    label: B;
 }
 
 export interface GifExtensionValue {
@@ -11,17 +14,17 @@ export interface GifExtensionValue {
     label: number;
 }
 
-export abstract class GifExtension {
-    public introducer: ByteBufferMirror;
-    public label: ByteBufferMirror;
+export abstract class GifExtension<B> {
+    public introducer: Uint8BytesMirror<B>;
+    public label: Uint8BytesMirror<B>;
 
-    constructor(gifBytes: Buffer, offset: number) {
+    constructor(gifBytes: BytesView<B>, offset: number) {
         this.parseIntro(gifBytes, offset);
     }
 
-    protected parseIntro(gifBytes: Buffer, offset: number): void {
-        this.introducer = new ByteBufferMirror(gifBytes.slice(offset, offset + 1));
-        this.label = new ByteBufferMirror(gifBytes.slice(offset + 1, offset + 2));
+    protected parseIntro(gifBytes: BytesView<B>, offset: number): void {
+        this.introducer = instantiator.instance.uint8BytesMirror(gifBytes.slice(offset, offset + 1));
+        this.introducer = instantiator.instance.uint8BytesMirror(gifBytes.slice(offset + 1, offset + 2));
     }
 
     protected get introSize(): number {
@@ -32,7 +35,7 @@ export abstract class GifExtension {
         return this.introducer.value === EXTENSION_INTRODUCER;
     }
 
-    abstract get raw(): GifExtensionRaw;
+    abstract get raw(): GifExtensionRaw<B>;
     abstract get value(): GifExtensionValue;
     abstract get size(): number;
 }
