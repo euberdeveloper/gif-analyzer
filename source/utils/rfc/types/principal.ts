@@ -11,30 +11,30 @@ import {
     GifTableBasedImageData
 } from '../parts';
 
-export interface GifRfc {
-    header: GifHeader;
-    logicalScreen: GifLogicalScreen;
-    data: GifData[];
+export interface GifRfc<B> {
+    header: GifHeader<B>;
+    logicalScreen: GifLogicalScreen<B>;
+    data: GifData<B>[];
 }
 
-export interface GifLogicalScreen {
-    descriptor: GifLogicalScreenDescriptor;
-    globalColorTable: GifColor[] | null;
+export interface GifLogicalScreen<B> {
+    descriptor: GifLogicalScreenDescriptor<B>;
+    globalColorTable: GifColor<B>[] | null;
 }
 
-export type GifData = GifGraphicBlock | GifSpecialPurposeBlock;
-export type GifSpecialPurposeBlock = GifApplicationExtension | GifCommentExtension;
+export type GifData<B> = GifGraphicBlock<B> | GifSpecialPurposeBlock<B>;
+export type GifSpecialPurposeBlock<B> = GifApplicationExtension<B> | GifCommentExtension<B>;
 
-export interface GifGraphicBlock {
-    graphicControlExtension: GifGraphicControlExtension | null;
-    otherExtensions: GifExtension[];
-    graphicRenderingBlock: GifGraphicRenderingBlock;
+export interface GifGraphicBlock<B> {
+    graphicControlExtension: GifGraphicControlExtension<B> | null;
+    otherExtensions: GifExtension<B>[];
+    graphicRenderingBlock: GifGraphicRenderingBlock<B>;
 }
 
-export type GifGraphicRenderingBlock = GifTableBasedImage | GifPlainTextExtension;
+export type GifGraphicRenderingBlock<B> = GifTableBasedImage<B> | GifPlainTextExtension<B>;
 
-export interface GifTableBasedImage {
-    descriptor: GifImageDescriptor;
-    localColorTable: GifColor[] | null;
-    data: GifTableBasedImageData;
+export interface GifTableBasedImage<B> {
+    descriptor: GifImageDescriptor<B>;
+    localColorTable: GifColor<B>[] | null;
+    data: GifTableBasedImageData<B>;
 }
