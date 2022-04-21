@@ -25,7 +25,7 @@ export abstract class GifExtension<B> extends WithInstantiator<B> {
 
     protected parseIntro(gifBytes: BytesView<B>, offset: number): void {
         this.introducer = this.instantiator.uint8BytesMirror(gifBytes.slice(offset, offset + 1));
-        this.introducer = this.instantiator.uint8BytesMirror(gifBytes.slice(offset + 1, offset + 2));
+        this.label = this.instantiator.uint8BytesMirror(gifBytes.slice(offset + 1, offset + 2));
     }
 
     protected get introSize(): number {

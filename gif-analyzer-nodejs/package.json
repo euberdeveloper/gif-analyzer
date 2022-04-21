@@ -1,7 +1,7 @@
 {
-  "name": "gif-analyzer-core",
-  "version": "1.0.7",
-  "description": "The core for an npm module to decompose a GIF file into its RFC parts",
+  "name": "gif-analyzer-nodejs",
+  "version": "1.0.1",
+  "description": "An npm module to decompose a GIF file into its RFC parts",
   "main": "bundled/index.js",
   "types": "bundled/index.d.ts",
   "files": [
@@ -39,6 +39,7 @@
   "devDependencies": {
     "@euberdeveloper/eslint-plugin": "^2.3.0",
     "@types/module-alias": "^2.0.1",
+    "@types/node": "^17.0.25",
     "@typescript-eslint/eslint-plugin": "^5.20.0",
     "@typescript-eslint/parser": "^5.20.0",
     "bundle-declarations-webpack-plugin": "^3.0.1",
@@ -59,6 +60,8 @@
     "webpack-node-externals": "^3.0.0"
   },
   "dependencies": {
-    "@blackmirror/bytes-mirror": "^0.5.3"
+    "@blackmirror/buffer-mirror": "^0.4.2",
+    "@blackmirror/buffer-view": "^0.4.2",
+    "gif-analyzer-core": "^1.0.7"
   }
 }
