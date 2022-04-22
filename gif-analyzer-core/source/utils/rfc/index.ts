@@ -13,7 +13,9 @@ function _rfcToRaw(data: any): any {
         return data.map(d => _rfcToRaw(d));
     } else if (typeof data === 'object') {
         return Object.entries(data).reduce((acc, [k, v]) => {
-            acc[k] = _rfcToRaw(v);
+            if (k !== 'instantiator') {
+                acc[k] = _rfcToRaw(v);
+            }
             return acc;
         }, {});
     } else {
@@ -33,7 +35,9 @@ function _rfcToValue(data: any): any {
         return data.map(d => _rfcToValue(d));
     } else if (typeof data === 'object') {
         return Object.entries(data).reduce((acc, [k, v]) => {
-            acc[k] = _rfcToValue(v);
+            if (k !== 'instantiator') {
+                acc[k] = _rfcToValue(v);
+            }
             return acc;
         }, {});
     } else {
