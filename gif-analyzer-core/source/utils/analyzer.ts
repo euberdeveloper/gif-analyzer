@@ -24,7 +24,7 @@ import {
     GifCommentExtension
 } from './rfc';
 
-export abstract class GifAnalyzer<B> {
+export abstract class GifAnalyzerCore<B> {
     private readonly bytes: BytesView<B>;
     private readonly _rfc: GifRfc<B>;
     private cursor = 0;

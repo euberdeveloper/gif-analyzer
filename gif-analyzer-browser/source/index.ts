@@ -1,7 +1,7 @@
 import { BytesView } from '@blackmirror/bytes-mirror';
 import { ArrayBufferView } from '@blackmirror/array-buffer-view';
 import {
-    GifAnalyzer as GifAnalyzerCore,
+    GifAnalyzerCore,
     GifApplicationExtension,
     GifColor,
     GifCommentExtension,
@@ -24,6 +24,8 @@ import {
     GifPlainTextExtensionArrayBuffer,
     GifTableBasedImageDataArrayBuffer
 } from './utils';
+
+export * from 'gif-analyzer-core';
 
 export class GifAnalyzer extends GifAnalyzerCore<ArrayBuffer> {
     protected bytesToBytesView(bytes: ArrayBuffer): BytesView<ArrayBuffer> {
