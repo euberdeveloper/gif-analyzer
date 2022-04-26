@@ -1,6 +1,6 @@
 {
   "name": "gif-analyzer-nodejs",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "An npm module to decompose a GIF file into its RFC parts",
   "main": "bundled/index.js",
   "types": "bundled/index.d.ts",
@@ -60,7 +60,7 @@
     "webpack-node-externals": "^3.0.0"
   },
   "dependencies": {
-    "@blackmirror/buffer-mirror": "^0.4.2",
+    "@blackmirror/buffer-mirror": "^0.4.3",
     "@blackmirror/buffer-view": "^0.4.2",
     "gif-analyzer-core": "^1.1.0"
   }
