@@ -1,6 +1,6 @@
 {
   "name": "gif-analyzer-browser",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "An npm module to decompose a GIF file into its RFC parts",
   "main": "bundled/index.js",
   "types": "bundled/index.d.ts",
@@ -62,6 +62,6 @@
   "dependencies": {
     "@blackmirror/array-buffer-mirror": "^0.4.2",
     "@blackmirror/array-buffer-view": "^0.4.2",
-    "gif-analyzer-core": "^1.1.0"
+    "gif-analyzer-core": "^1.1.2"
   }
 }

@@ -25,10 +25,10 @@ export abstract class GraphicControlBlockPackedFieldsBytesMirror<B> extends Byte
     }
     protected valueToBytes(value: GraphicControlBlockPackedFields): BytesView<B> {
         let byte = 0xff;
-        byte = writeBits(byte, value.reserved, 0, 3);
-        byte = writeBits(byte, value.disposalMethod, 3, 6);
-        byte = writeBits(byte, value.userInputFlag ? 1 : 0, 6, 7);
-        byte = writeBits(byte, value.transparentColorFlag ? 1 : 0, 7, 8);
+        byte = writeBits(byte, 0, 3, value.reserved);
+        byte = writeBits(byte, 3, 6, value.disposalMethod);
+        byte = writeBits(byte, 6, 7, value.userInputFlag ? 1 : 0);
+        byte = writeBits(byte, 7, 8, value.transparentColorFlag ? 1 : 0);
         return this.bytesView.from([byte]);
     }
 }

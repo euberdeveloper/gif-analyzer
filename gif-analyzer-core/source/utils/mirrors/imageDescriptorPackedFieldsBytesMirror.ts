@@ -24,10 +24,11 @@ export abstract class ImageDescriptorPackedFieldsBytesMirror<B> extends BytesMir
     }
     protected valueToBytes(value: ImageDescriptorPackedFields): BytesView<B> {
         let byte = 0xff;
-        byte = writeBits(byte, value.localColorTableFlag ? 1 : 0, 0, 1);
-        byte = writeBits(byte, value.interlaceFlag ? 1 : 0, 1, 2);
-        byte = writeBits(byte, value.sortFlag ? 1 : 0, 2, 3);
-        byte = writeBits(byte, value.reserved, 3, 5);
+        byte = writeBits(byte, 0, 1, value.localColorTableFlag ? 1 : 0);
+        byte = writeBits(byte, 1, 2, value.interlaceFlag ? 1 : 0);
+        byte = writeBits(byte, 2, 3, value.sortFlag ? 1 : 0);
+        byte = writeBits(byte, 3, 5, value.reserved);
+        byte = writeBits(byte, 5, 8, value.localColorTableSize);
         return this.bytesView.from([byte]);
     }
 }
