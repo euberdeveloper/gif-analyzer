@@ -21,7 +21,8 @@ import {
     GifTableBasedImage,
     GifImageDescriptor,
     GifTableBasedImageData,
-    GifCommentExtension
+    GifCommentExtension,
+    GifTrailer
 } from './rfc';
 
 export abstract class GifAnalyzerCore<B> {
@@ -41,12 +42,130 @@ export abstract class GifAnalyzerCore<B> {
         return rfcToValue(this._rfc);
     }
 
+    get content(): B {
+        let result: B;
+
+        result = this.mergeBytes(
+            this.raw.header.signature,
+            this.raw.header.version,
+            this.raw.logicalScreen.descriptor.width,
+            this.raw.logicalScreen.descriptor.height,
+            this.raw.logicalScreen.descriptor.packedFields,
+            this.raw.logicalScreen.descriptor.backgroundColorIndex,
+            this.raw.logicalScreen.descriptor.pixelAspectRatio
+        );
+
+        if (this.raw.logicalScreen.globalColorTable) {
+            result = this.mergeBytes(
+                result,
+                ...this.raw.logicalScreen.globalColorTable.map(({ red, green, blue }) =>
+                    this.mergeBytes(red, green, blue)
+                )
+            );
+        }
+
+        for (const block of this.rfc.data) {
+            if (block instanceof GifApplicationExtension) {
+                result = this.mergeBytes(
+                    result,
+                    block.raw.introducer,
+                    block.raw.label,
+                    block.raw.blockSize,
+                    block.raw.applicationIdentifier,
+                    block.raw.applicationAuthenticationCode,
+                    block.raw.applicationData
+                );
+            } else if (block instanceof GifCommentExtension) {
+                result = this.mergeBytes(result, block.raw.introducer, block.raw.label, block.raw.comment);
+            } else {
+                if (block.graphicControlExtension) {
+                    result = this.mergeBytes(
+                        result,
+                        block.graphicControlExtension.raw.introducer,
+                        block.graphicControlExtension.raw.label,
+                        block.graphicControlExtension.raw.blockSize,
+                        block.graphicControlExtension.raw.packedFields,
+                        block.graphicControlExtension.raw.delayTime,
+                        block.graphicControlExtension.raw.transparentColorIndex,
+                        block.graphicControlExtension.raw.blockTerminator
+                    );
+                }
+                for (const extension of block.otherExtensions) {
+                    if (extension instanceof GifCommentExtension) {
+                        result = this.mergeBytes(
+                            result,
+                            extension.raw.introducer,
+                            extension.raw.label,
+                            extension.raw.comment
+                        );
+                    } else if (extension instanceof GifApplicationExtension) {
+                        result = this.mergeBytes(
+                            result,
+                            extension.raw.introducer,
+                            extension.raw.label,
+                            extension.raw.blockSize,
+                            extension.raw.applicationIdentifier,
+                            extension.raw.applicationAuthenticationCode,
+                            extension.raw.applicationData
+                        );
+                    }
+                }
+
+                if (block.graphicRenderingBlock instanceof GifPlainTextExtension) {
+                    result = this.mergeBytes(
+                        result,
+                        block.graphicRenderingBlock.raw.introducer,
+                        block.graphicRenderingBlock.raw.label,
+                        block.graphicRenderingBlock.raw.blockSize,
+                        block.graphicRenderingBlock.raw.textGridLeftPosition,
+                        block.graphicRenderingBlock.raw.textGridTopPosition,
+                        block.graphicRenderingBlock.raw.textGridWidth,
+                        block.graphicRenderingBlock.raw.textGridHeight,
+                        block.graphicRenderingBlock.raw.characterCellWidth,
+                        block.graphicRenderingBlock.raw.characterCellHeight,
+                        block.graphicRenderingBlock.raw.textForegroundColor,
+                        block.graphicRenderingBlock.raw.textBackgroundColor,
+                        block.graphicRenderingBlock.raw.text
+                    );
+                } else {
+                    result = this.mergeBytes(
+                        result,
+                        block.graphicRenderingBlock.descriptor.raw.imageSeparator,
+                        block.graphicRenderingBlock.descriptor.raw.leftPosition,
+                        block.graphicRenderingBlock.descriptor.raw.topPosition,
+                        block.graphicRenderingBlock.descriptor.raw.width,
+                        block.graphicRenderingBlock.descriptor.raw.height,
+                        block.graphicRenderingBlock.descriptor.raw.packedFields
+                    );
+                    if (block.graphicRenderingBlock.localColorTable) {
+                        result = this.mergeBytes(result);
+                        result = this.mergeBytes(
+                            result,
+                            ...block.graphicRenderingBlock.localColorTable.map(({ red, green, blue }) =>
+                                this.mergeBytes(red.raw, green.raw, blue.raw)
+                            )
+                        );
+                    }
+                    result = this.mergeBytes(
+                        result,
+                        block.graphicRenderingBlock.data.raw.lzwMinimumCodeSize,
+                        block.graphicRenderingBlock.data.raw.data
+                    );
+                }
+            }
+        }
+
+        result = this.mergeBytes(result, this.raw.trailer.trailer);
+
+        return result;
+    }
+
     constructor(bytes: B) {
         this.bytes = this.bytesToBytesView(bytes);
         this._rfc = {
             header: this.parseHeader(),
             logicalScreen: this.parseLogicalScreen(),
-            data: this.parseData()
+            ...this.parseDataAndTrailer()
         };
     }
 
@@ -91,11 +210,13 @@ export abstract class GifAnalyzerCore<B> {
         }
     }
 
-    private parseData(): GifData<B>[] {
+    private parseDataAndTrailer(): { data: GifData<B>[]; trailer: GifTrailer<B> } {
         const data: GifData<B>[] = [];
 
+        let nextByte: number;
+
         for (
-            let nextByte = this.bytes.readUint8(this.cursor);
+            nextByte = this.bytes.readUint8(this.cursor);
             nextByte !== TRAILER;
             nextByte = this.bytes.readUint8(this.cursor)
         ) {
@@ -112,7 +233,9 @@ export abstract class GifAnalyzerCore<B> {
             }
         }
 
-        return data;
+        const trailer = this.parseTrailer();
+
+        return { data, trailer };
     }
 
     private parseExtension(): GifData<B> {
@@ -224,6 +347,12 @@ export abstract class GifAnalyzerCore<B> {
         return result;
     }
 
+    private parseTrailer(): GifTrailer<B> {
+        const result = this.instantiateTrailer(this.bytes, this.cursor);
+        this.cursor += result.size;
+        return result;
+    }
+
     protected abstract bytesToBytesView(bytes: B): BytesView<B>;
     protected abstract instantiateHeader(bytes: BytesView<B>, cursor: number): GifHeader<B>;
     protected abstract instantiateLogicalScreenDescriptor(
@@ -240,4 +369,6 @@ export abstract class GifAnalyzerCore<B> {
     protected abstract instantiatePlainTextExtension(bytes: BytesView<B>, cursor: number): GifPlainTextExtension<B>;
     protected abstract instantiateApplicationExtension(bytes: BytesView<B>, cursor: number): GifApplicationExtension<B>;
     protected abstract instantiateCommentExtension(bytes: BytesView<B>, cursor: number): GifCommentExtension<B>;
+    protected abstract instantiateTrailer(bytes: BytesView<B>, cursor: number): GifTrailer<B>;
+    protected abstract mergeBytes(...bytes: B[]): B;
 }

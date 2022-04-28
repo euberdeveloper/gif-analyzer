@@ -8,13 +8,15 @@ import {
     GifExtension,
     GifPlainTextExtension,
     GifImageDescriptor,
-    GifTableBasedImageData
+    GifTableBasedImageData,
+    GifTrailer
 } from '../parts';
 
 export interface GifRfc<B> {
     header: GifHeader<B>;
     logicalScreen: GifLogicalScreen<B>;
     data: GifData<B>[];
+    trailer: GifTrailer<B>;
 }
 
 export interface GifLogicalScreen<B> {

@@ -8,6 +8,7 @@ import {
     GifLogicalScreenDescriptor,
     GifPlainTextExtension,
     GifTableBasedImageData,
+    GifTrailer,
     Instantiator
 } from 'gif-analyzer-core';
 
@@ -62,6 +63,12 @@ export class GifApplicationExtensionBuffer extends GifApplicationExtension<Buffe
 }
 
 export class GifCommentExtensionBuffer extends GifCommentExtension<Buffer> {
+    protected initializeInstantiator(): Instantiator<Buffer> {
+        return new InstantiatorBuffer();
+    }
+}
+
+export class GifTrailerBuffer extends GifTrailer<Buffer> {
     protected initializeInstantiator(): Instantiator<Buffer> {
         return new InstantiatorBuffer();
     }

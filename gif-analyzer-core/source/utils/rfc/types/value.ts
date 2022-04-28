@@ -8,13 +8,15 @@ import {
     GifExtensionValue,
     GifPlainTextExtensionValue,
     GifImageDescriptorValue,
-    GifTableBasedImageDataValue
+    GifTableBasedImageDataValue,
+    GifTrailerValue
 } from '../parts';
 
 export interface GifRfcValue {
     header: GifHeaderValue;
     logicalScreen: GifLogicalScreenValue;
     data: GifDataValue[];
+    trailer: GifTrailerValue;
 }
 
 export interface GifLogicalScreenValue {

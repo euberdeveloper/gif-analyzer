@@ -7,6 +7,7 @@ import { getDataSubBlocksSize } from '@/utils/parsing';
 import { GifExtension, GifExtensionRaw, GifExtensionValue } from './extension';
 
 export interface GifPlainTextExtensionRaw<B> extends GifExtensionRaw<B> {
+    blockSize: B;
     textGridLeftPosition: B;
     textGridTopPosition: B;
     textGridWidth: B;
@@ -19,6 +20,7 @@ export interface GifPlainTextExtensionRaw<B> extends GifExtensionRaw<B> {
 }
 
 export interface GifPlainTextExtensionValue extends GifExtensionValue {
+    blockSize: number;
     textGridLeftPosition: number;
     textGridTopPosition: number;
     textGridWidth: number;
@@ -72,6 +74,7 @@ export abstract class GifPlainTextExtension<B> extends GifExtension<B> {
         return (
             this.introducer.size +
             this.label.size +
+            this.blockSize.size +
             this.textGridLeftPosition.size +
             this.textGridTopPosition.size +
             this.textGridWidth.size +
@@ -88,6 +91,7 @@ export abstract class GifPlainTextExtension<B> extends GifExtension<B> {
         return {
             introducer: this.introducer.bytes,
             label: this.label.bytes,
+            blockSize: this.blockSize.bytes,
             textGridLeftPosition: this.textGridLeftPosition.bytes,
             textGridTopPosition: this.textGridTopPosition.bytes,
             textGridWidth: this.textGridWidth.bytes,
@@ -104,6 +108,7 @@ export abstract class GifPlainTextExtension<B> extends GifExtension<B> {
         return {
             introducer: this.introducer.value,
             label: this.label.value,
+            blockSize: this.blockSize.value,
             textGridLeftPosition: this.textGridLeftPosition.value,
             textGridTopPosition: this.textGridTopPosition.value,
             textGridWidth: this.textGridWidth.value,

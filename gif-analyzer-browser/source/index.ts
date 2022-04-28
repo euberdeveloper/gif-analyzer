@@ -10,7 +10,8 @@ import {
     GifImageDescriptor,
     GifLogicalScreenDescriptor,
     GifPlainTextExtension,
-    GifTableBasedImageData
+    GifTableBasedImageData,
+    GifTrailer
 } from 'gif-analyzer-core';
 
 import {
@@ -22,7 +23,8 @@ import {
     GifImageDescriptorArrayBuffer,
     GifLogicalScreenDescriptorArrayBuffer,
     GifPlainTextExtensionArrayBuffer,
-    GifTableBasedImageDataArrayBuffer
+    GifTableBasedImageDataArrayBuffer,
+    GifTrailerArrayBuffer
 } from './utils';
 
 export * from 'gif-analyzer-core';
@@ -78,5 +80,20 @@ export class GifAnalyzer extends GifAnalyzerCore<ArrayBuffer> {
         cursor: number
     ): GifCommentExtension<ArrayBuffer> {
         return new GifCommentExtensionArrayBuffer(bytes, cursor);
+    }
+    protected instantiateTrailer(bytes: BytesView<ArrayBuffer>, cursor: number): GifTrailer<ArrayBuffer> {
+        return new GifTrailerArrayBuffer(bytes, cursor);
+    }
+    protected mergeBytes(...bytes: ArrayBuffer[]): ArrayBuffer {
+        const size = bytes.reduce((a, b) => a + b.byteLength, 0);
+        const result = new Uint8Array(size);
+
+        let offset = 0;
+        for (let arr of bytes) {
+            result.set(new Uint8Array(arr), offset);
+            offset += arr.byteLength;
+        }
+
+        return result.buffer;
     }
 }

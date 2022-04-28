@@ -8,13 +8,15 @@ import {
     GifImageDescriptorRaw,
     GifLogicalScreenDescriptorRaw,
     GifPlainTextExtensionRaw,
-    GifTableBasedImageDataRaw
+    GifTableBasedImageDataRaw,
+    GifTrailerRaw
 } from '../parts';
 
 export interface GifRfcRaw<B> {
     header: GifHeaderRaw<B>;
     logicalScreen: GifLogicalScreenRaw<B>;
     data: GifDataRaw<B>[];
+    trailer: GifTrailerRaw<B>;
 }
 
 export interface GifLogicalScreenRaw<B> {
